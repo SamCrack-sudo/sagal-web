@@ -1,0 +1,23 @@
+---
+/** Preguntas frecuentes con <details> nativo (teclado y lector de pantalla sin JS). */
+import type { PreguntaFrecuente } from '@/lib/seo';
+
+interface Props {
+  preguntas: PreguntaFrecuente[];
+}
+
+const { preguntas } = Astro.props;
+---
+
+<div class="faq">
+  {
+    preguntas.map((p) => (
+      <details>
+        <summary>{p.pregunta}</summary>
+        <div>
+          <p>{p.respuesta}</p>
+        </div>
+      </details>
+    ))
+  }
+</div>

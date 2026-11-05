@@ -1,0 +1,94 @@
+---
+/**
+ * Cabecera de páginas interiores: rótulo, título, entrada y migas de pan,
+ * dibujada dentro del marco azul del encabezado.
+ */
+interface Props {
+  rotulo?: string;
+  titulo: string;
+  entrada?: string;
+  migas?: { nombre: string; ruta: string }[];
+}
+
+const { rotulo, titulo, entrada, migas = [] } = Astro.props;
+---
+
+<div class="cabecera-pagina">
+  {
+    migas.length > 0 && (
+      <nav aria-label="Ruta de navegación" class="migas">
+        <ol>
+          <li>
+            <a href="/">Inicio</a>
+          </li>
+          {migas.map((m, i) =>
+            i === migas.length - 1 ? (
+              <li aria-current="page">{m.nombre}</li>
+            ) : (
+              <li>
+                <a href={m.ruta}>{m.nombre}</a>
+              </li>
+            ),
+          )}
+        </ol>
+      </nav>
+    )
+  }
+  {rotulo && <p class="rotulo">{rotulo}</p>}
+  <h1 class="titulo-1">{titulo}</h1>
+  {entrada && <p class="entrada">{entrada}</p>}
+  <slot />
+</div>
+
+<style>
+  .cabecera-pagina {
+    display: grid;
+    gap: 20px;
+    padding: clamp(36px, 6vw, 72px) 0 clamp(40px, 6vw, 72px);
+    max-width: 52rem;
+  }
+
+  .cabecera-pagina .titulo-1 {
+    color: var(--c-sobre-azul);
+    font-size: clamp(2.25rem, 4.2vw, 3.75rem);
+  }
+
+  .cabecera-pagina .entrada {
+    color: var(--c-sobre-azul-2);
+  }
+
+  .cabecera-pagina .rotulo {
+    margin: 0;
+    color: var(--c-sobre-azul-3);
+  }
+
+  .cabecera-pagina .rotulo::before {
+    border-color: var(--c-acento);
+  }
+
+  .migas ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: var(--f-mini);
+    color: var(--c-sobre-azul-3);
+  }
+
+  .migas li + li::before {
+    content: '/';
+    margin: 0 8px 0 4px;
+    opacity: 0.6;
+  }
+
+  .migas a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .migas [aria-current] {
+    color: var(--c-sobre-azul);
+  }
+</style>

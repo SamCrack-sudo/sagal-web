@@ -1,0 +1,105 @@
+---
+import Base from '@/layouts/Base.astro';
+import CabeceraPagina from '@/components/CabeceraPagina.astro';
+import BandaCta from '@/components/BandaCta.astro';
+import { marca } from '@/config/marca';
+import { migas } from '@/lib/seo';
+
+const jsonLd = [migas([{ nombre: 'Nosotros', ruta: '/nosotros' }], Astro.site)];
+---
+
+<Base
+  titulo="Nosotros"
+  descripcion={`${marca.nombre} es un taller de ingeniería en ${marca.ubicacion.ciudad}, ${marca.ubicacion.region}: diseño CAD, impresión 3D, robótica y electrónica con criterio de ingeniería mecatrónica.`}
+  pagina="nosotros"
+  jsonLd={jsonLd}
+>
+  <CabeceraPagina
+    slot="cabecera"
+    rotulo="Nosotros"
+    titulo="Un taller de ingeniería, no una imprenta 3D"
+    entrada={`${marca.nombre} nació en ${marca.ubicacion.ciudad} para resolver problemas reales con piezas que funcionan: diseñadas con criterio, fabricadas con cuidado y probadas antes de entregar.`}
+    migas={[{ nombre: 'Nosotros', ruta: '/nosotros' }]}
+  />
+
+  <section class="seccion" aria-labelledby="historia-titulo">
+    <div class="contenedor dos-columnas">
+      <div class="dos-columnas__texto prosa">
+        <p class="rotulo">Quién está detrás</p>
+        <h2 class="titulo-2" id="historia-titulo">Experiencia de planta y de aula</h2>
+        <p>
+          El taller lo dirige un estudiante de ingeniería mecatrónica que trabajó en análisis de procesos industriales y en la coordinación de
+          mantenimiento de una planta de alimentos. Ahí aprendió lo que cuesta una máquina parada y por qué un repuesto tiene que llegar a tiempo y
+          durar.
+        </p>
+        <p>
+          También es docente de programación en un colegio. Esa experiencia se nota en cómo explicamos cada proyecto: entiendes qué recibes, cómo
+          funciona y cómo cuidarlo.
+        </p>
+        <p>[MARCADOR: nombre del fundador, si quieres publicarlo, y una frase en primera persona]</p>
+      </div>
+      <figure class="nosotros__foto">
+        <div class="pendiente">[FOTO DEL TALLER O DEL FUNDADOR]</div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="seccion seccion--alterna" aria-labelledby="principios-titulo">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <p class="rotulo">Cómo trabajamos</p>
+        <h2 class="titulo-2" id="principios-titulo">Principios</h2>
+      </div>
+      <div class="rejilla rejilla--3">
+        <div class="item-linea item-linea--fuerte">
+          <h3 class="titulo-4">Calidad antes que precio</h3>
+          <p class="secundario">No competimos por ser los más baratos, sino por entregar piezas que duran lo que tienen que durar.</p>
+        </div>
+        <div class="item-linea item-linea--fuerte">
+          <h3 class="titulo-4">Nada sin tu aprobación</h3>
+          <p class="secundario">Ves el diseño y el precio antes de fabricar. Si algo cambia, te lo explicamos.</p>
+        </div>
+        <div class="item-linea item-linea--fuerte">
+          <h3 class="titulo-4">Honestidad técnica</h3>
+          <p class="secundario">Si la impresión 3D no es la mejor solución para tu caso, te lo decimos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="donde-titulo">
+    <div class="contenedor dos-columnas">
+      <div class="dos-columnas__texto">
+        <p class="rotulo">Dónde estamos</p>
+        <h2 class="titulo-2" id="donde-titulo">{marca.ubicacion.ciudad}, {marca.ubicacion.zona}</h2>
+        <p class="entrada">
+          Cerca de Bogotá y de las zonas industriales de la sabana. Atendemos {marca.ubicacion.areaServicio.slice(0, -1).join(', ')} y{' '}
+          {marca.ubicacion.areaServicio.at(-1)}.
+        </p>
+      </div>
+      <dl class="especificaciones">
+        <dt>Ciudad</dt>
+        <dd>{marca.ubicacion.ciudad}, {marca.ubicacion.region}</dd>
+        <dt>Dirección</dt>
+        <dd>{marca.ubicacion.direccion}</dd>
+        <dt>Horario</dt>
+        <dd>{marca.ubicacion.horario}</dd>
+        <dt>Desde</dt>
+        <dd>{marca.fundacion}</dd>
+      </dl>
+    </div>
+  </section>
+
+  <BandaCta
+    titulo="¿Trabajamos juntos?"
+    principal={{ texto: 'Cotizar impresión 3D', href: '/cotizar', evento: 'clic_cta_cotizar' }}
+    secundario={{ texto: 'Escribirnos', href: '/contacto' }}
+    origen="nosotros"
+  />
+</Base>
+
+<style>
+  .nosotros__foto {
+    margin: 0;
+  }
+</style>

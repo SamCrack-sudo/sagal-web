@@ -1,0 +1,119 @@
+---
+import Base from '@/layouts/Base.astro';
+import CabeceraPagina from '@/components/CabeceraPagina.astro';
+import Faq from '@/components/Faq.astro';
+import Cotizador from '@/components/islas/cotizador/Cotizador';
+import { configPreciosInicial } from '@/config/precios';
+import { marca } from '@/config/marca';
+import { migas, paginaFaq, servicio, type PreguntaFrecuente } from '@/lib/seo';
+
+const v = marca.equipos.volumenImpresion;
+
+const preguntas: PreguntaFrecuente[] = [
+  {
+    pregunta: '¿Qué archivos aceptan?',
+    respuesta:
+      'STL y 3MF en el cotizador instantáneo. Si tienes STEP, OBJ, DWG, un plano en PDF o solo fotos, usa la opción “No tengo archivo” y adjúntalos: lo revisamos y te cotizamos.',
+  },
+  {
+    pregunta: '¿El precio del cotizador es el definitivo?',
+    respuesta:
+      'Es un precio estimado calculado con el volumen real de tu pieza. Lo confirmamos al revisar el archivo: verificamos orientación, soportes y que la pieza sea imprimible. Nada se fabrica sin tu aprobación.',
+  },
+  {
+    pregunta: '¿Qué pasa con mi archivo?',
+    respuesta:
+      'El precio se calcula en tu navegador; el archivo solo se envía cuando nos mandas la cotización, y lo usamos únicamente para cotizar y fabricar tu pieza. No lo compartimos con terceros.',
+  },
+  {
+    pregunta: '¿Qué tan grande puede ser la pieza?',
+    respuesta: `El volumen útil de impresión es de ${v.x} × ${v.y} × ${v.z} mm. Si tu pieza es más grande, podemos dividirla en partes que se ensamblan.`,
+  },
+  {
+    pregunta: '¿Puedo pedir piezas en varios colores?',
+    respuesta: `Sí. Con el sistema ${marca.equipos.sistemaColor} imprimimos hasta ${configPreciosInicial.maxColores} colores en una misma pieza. Lo ideal es un 3MF con los colores asignados; si no, descríbenos qué va de cada color.`,
+  },
+  {
+    pregunta: '¿Cómo se paga?',
+    respuesta:
+      'Cuando apruebas la cotización final te enviamos un enlace de pago o los datos para transferencia. [CONFIGURAR: condiciones de anticipo y medios de pago]',
+  },
+];
+
+const jsonLd = [
+  servicio(
+    {
+      nombre: 'Cotizador de impresión 3D',
+      descripcion: 'Cotización instantánea de impresión 3D a partir de archivos STL o 3MF.',
+      ruta: '/cotizar',
+      tipo: 'Impresión 3D bajo pedido',
+    },
+    Astro.site,
+  ),
+  paginaFaq(preguntas),
+  migas([{ nombre: 'Cotizar', ruta: '/cotizar' }], Astro.site),
+];
+---
+
+<Base
+  titulo="Cotiza tu impresión 3D al instante"
+  descripcion={`Sube tu STL o 3MF y obtén el precio de tu impresión 3D al instante: medidas, volumen, material y plazo. Taller en ${marca.ubicacion.ciudad}, cerca de Bogotá.`}
+  mensajeWhatsApp={`Hola ${marca.nombre}, tengo una pregunta sobre una cotización de impresión 3D.`}
+  pagina="cotizar"
+  jsonLd={jsonLd}
+>
+  <CabeceraPagina
+    slot="cabecera"
+    rotulo="Cotizador instantáneo"
+    titulo="Cotiza tu pieza en un minuto"
+    entrada="Sube tu archivo, mira la pieza en 3D con sus medidas reales y elige material, color y acabado. El precio se actualiza mientras eliges."
+    migas={[{ nombre: 'Cotizar', ruta: '/cotizar' }]}
+  />
+
+  <section class="seccion seccion--cotizador" aria-label="Cotizador">
+    <div class="contenedor contenedor--amplio">
+      <Cotizador client:load config={configPreciosInicial} volumen={marca.equipos.volumenImpresion} />
+    </div>
+  </section>
+
+  <section class="seccion seccion--alterna" aria-labelledby="como-titulo">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <p class="rotulo">Después de enviar</p>
+        <h2 class="titulo-2" id="como-titulo">Qué pasa con tu cotización</h2>
+      </div>
+      <ol class="pasos">
+        <li class="item-linea item-linea--fuerte">
+          <span class="pasos__numero">1</span>
+          <h3 class="titulo-4">Revisamos el archivo</h3>
+          <p>Verificamos que la pieza sea imprimible, su orientación y los soportes que necesita.</p>
+        </li>
+        <li class="item-linea item-linea--fuerte">
+          <span class="pasos__numero">2</span>
+          <h3 class="titulo-4">Confirmamos precio y plazo</h3>
+          <p>Te escribimos con el valor final. Si algo cambia respecto al estimado, te explicamos por qué.</p>
+        </li>
+        <li class="item-linea item-linea--fuerte">
+          <span class="pasos__numero">3</span>
+          <h3 class="titulo-4">Fabricamos y verificamos</h3>
+          <p>Imprimimos cuando apruebas y revisamos medidas y acabado antes de entregar.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="faq-titulo">
+    <div class="contenedor contenedor--estrecho">
+      <div class="cabecera-seccion">
+        <h2 class="titulo-2" id="faq-titulo">Preguntas sobre el cotizador</h2>
+      </div>
+      <Faq preguntas={preguntas} />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .seccion--cotizador {
+    padding-top: clamp(40px, 6vw, 72px);
+  }
+</style>

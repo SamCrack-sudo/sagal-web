@@ -1,0 +1,194 @@
+---
+import Base from '@/layouts/Base.astro';
+import CabeceraPagina from '@/components/CabeceraPagina.astro';
+import BandaCta from '@/components/BandaCta.astro';
+import Faq from '@/components/Faq.astro';
+import { marca } from '@/config/marca';
+import { configPreciosInicial as precios } from '@/config/precios';
+import { migas, paginaFaq, servicio, type PreguntaFrecuente } from '@/lib/seo';
+import { formatoNumero } from '@/lib/precios/motor';
+
+const v = marca.equipos.volumenImpresion;
+const materiales = precios.materiales.filter((m) => m.activo);
+const calidades = precios.calidades.filter((q) => q.activo);
+
+const preguntas: PreguntaFrecuente[] = [
+  {
+    pregunta: '¿Cuál es la diferencia entre PLA, PETG, ASA y TPU?',
+    respuesta:
+      'El PLA es rígido y preciso, ideal para prototipos y piezas de interior. El PETG es más tenaz y soporta mejor la temperatura y la humedad. El ASA resiste la intemperie y el sol. El TPU es flexible, como el caucho. Si no sabes cuál elegir, cuéntanos el uso y te recomendamos. [CONFIGURAR: ajusta según tus materiales]',
+  },
+  {
+    pregunta: '¿Qué tan resistente queda una pieza impresa?',
+    respuesta:
+      'Depende del material, el relleno, el número de paredes y la orientación de impresión. Para piezas que soportan carga ajustamos esos parámetros y orientamos la pieza para que las capas trabajen a favor del esfuerzo.',
+  },
+  {
+    pregunta: '¿Imprimen en varios colores?',
+    respuesta: `Sí. Con el ${marca.equipos.sistemaColor} imprimimos hasta ${precios.maxColores} colores en una misma pieza, o combinamos materiales compatibles en una misma pieza cuando el diseño lo permite.`,
+  },
+  {
+    pregunta: '¿Hacen series de varias piezas?',
+    respuesta:
+      'Sí, hacemos series cortas. El cotizador aplica descuentos por cantidad y calcula el plazo según las horas de máquina del pedido completo.',
+  },
+];
+
+const jsonLd = [
+  servicio(
+    {
+      nombre: 'Impresión 3D bajo pedido',
+      descripcion: `Impresión 3D multicolor y multimaterial en ${marca.ubicacion.ciudad}: prototipos, piezas funcionales, repuestos y series cortas.`,
+      ruta: '/servicios/impresion-3d',
+      tipo: 'Impresión 3D',
+    },
+    Astro.site,
+  ),
+  paginaFaq(preguntas),
+  migas(
+    [
+      { nombre: 'Servicios', ruta: '/servicios/impresion-3d' },
+      { nombre: 'Impresión 3D', ruta: '/servicios/impresion-3d' },
+    ],
+    Astro.site,
+  ),
+];
+---
+
+<Base
+  titulo={`Impresión 3D en ${marca.ubicacion.ciudad}, Chía y Bogotá`}
+  descripcion={`Servicio de impresión 3D en ${marca.ubicacion.ciudad} (Sabana Centro): piezas funcionales, prototipos y repuestos en ${materiales.map((m) => m.nombre.split(' ')[0]).join(', ')}, multicolor. Cotiza tu STL al instante.`}
+  mensajeWhatsApp={`Hola ${marca.nombre}, quiero imprimir una pieza en 3D.`}
+  pagina="servicio-impresion"
+  jsonLd={jsonLd}
+>
+  <CabeceraPagina
+    slot="cabecera"
+    rotulo="Servicio"
+    titulo="Impresión 3D con criterio de ingeniería"
+    entrada="Prototipos, piezas funcionales y repuestos en uno o varios colores. Elegimos material, orientación y relleno según lo que la pieza tiene que aguantar."
+    migas={[{ nombre: 'Servicios', ruta: '/servicios/impresion-3d' }, { nombre: 'Impresión 3D', ruta: '/servicios/impresion-3d' }]}
+  >
+    <div class="grupo-botones">
+      <a href="/cotizar" class="boton boton--primario" data-evento="clic_cta_cotizar" data-origen="servicio-impresion">Cotizar mi archivo</a>
+      <a href="/empresas" class="boton boton--claro">Piezas para empresas</a>
+    </div>
+  </CabeceraPagina>
+
+  <section class="seccion" aria-labelledby="usos-titulo">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <p class="rotulo">Para qué sirve</p>
+        <h2 class="titulo-2" id="usos-titulo">Piezas que se usan, no solo que se ven</h2>
+      </div>
+      <div class="rejilla rejilla--3">
+        <div class="item-linea item-linea--fuerte">
+          <h3 class="titulo-4">Prototipos</h3>
+          <p class="secundario">Valida forma, tamaño y ajuste antes de invertir en moldes o mecanizado.</p>
+        </div>
+        <div class="item-linea item-linea--fuerte">
+          <h3 class="titulo-4">Piezas funcionales</h3>
+          <p class="secundario">Soportes, carcasas, engranajes, organizadores y piezas de uso diario.</p>
+        </div>
+        <div class="item-linea item-linea--fuerte">
+          <h3 class="titulo-4">Repuestos</h3>
+          <p class="secundario">Piezas rotas o descontinuadas, reproducidas a partir de la original o de un plano.</p>
+        </div>
+        <div class="item-linea item-linea--fuerte">
+          <h3 class="titulo-4">Multicolor</h3>
+          <p class="secundario">Hasta {precios.maxColores} colores por pieza con el {marca.equipos.sistemaColor}: logos, señalética, maquetas.</p>
+        </div>
+        <div class="item-linea item-linea--fuerte">
+          <h3 class="titulo-4">Series cortas</h3>
+          <p class="secundario">Decenas de piezas idénticas, con descuento por cantidad.</p>
+        </div>
+        <div class="item-linea item-linea--fuerte">
+          <h3 class="titulo-4">Maquetas</h3>
+          <p class="secundario">Modelos para arquitectura, presentaciones y proyectos académicos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion seccion--alterna" aria-labelledby="materiales-titulo">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <p class="rotulo">Materiales</p>
+        <h2 class="titulo-2" id="materiales-titulo">El material según el uso</h2>
+        <p class="entrada">Te recomendamos el material según temperatura, esfuerzo, intemperie o flexibilidad.</p>
+      </div>
+      <div class="tabla-envoltura" role="region" aria-label="Tabla de materiales" tabindex="0">
+        <table class="tabla">
+          <caption class="sr-only">Materiales disponibles</caption>
+          <thead>
+            <tr>
+              <th scope="col">Material</th>
+              <th scope="col">Características</th>
+              <th scope="col">Ideal para</th>
+              <th scope="col">Multicolor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              materiales.map((m) => (
+                <tr>
+                  <th scope="row">{m.nombre}</th>
+                  <td>{m.descripcion}</td>
+                  <td>{m.usos}</td>
+                  <td>{m.permiteMulticolor ? 'Sí' : 'No'}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      {precios.esDemo && <p class="secundario nota-demo">[CONFIGURAR] Catálogo de materiales de ejemplo: confirma los materiales que tienes disponibles.</p>}
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="equipo-titulo">
+    <div class="contenedor dos-columnas">
+      <div class="dos-columnas__texto">
+        <p class="rotulo">Equipo</p>
+        <h2 class="titulo-2" id="equipo-titulo">{marca.equipos.impresora} con {marca.equipos.sistemaColor}</h2>
+        <p class="entrada">
+          Impresora de cámara cerrada con cambio automático de filamento: imprime en varios colores o materiales en una misma pieza y mantiene estable
+          la temperatura para materiales técnicos.
+        </p>
+      </div>
+      <dl class="especificaciones">
+        <dt>Volumen de impresión</dt>
+        <dd>{v.x} × {v.y} × {v.z} mm</dd>
+        <dt>Colores por pieza</dt>
+        <dd>Hasta {precios.maxColores}</dd>
+        {
+          calidades.map((q) => (
+            <>
+              <dt>Calidad {q.nombre.toLowerCase()}</dt>
+              <dd>{formatoNumero(q.alturaCapaMm, 2)} mm por capa</dd>
+            </>
+          ))
+        }
+        <dt>Formatos aceptados</dt>
+        <dd>STL, 3MF (otros, por solicitud)</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="seccion seccion--alterna" aria-labelledby="faq-titulo">
+    <div class="contenedor contenedor--estrecho">
+      <div class="cabecera-seccion">
+        <h2 class="titulo-2" id="faq-titulo">Preguntas frecuentes</h2>
+      </div>
+      <Faq preguntas={preguntas} />
+    </div>
+  </section>
+
+  <BandaCta
+    titulo="¿Tienes el archivo? El precio sale en un minuto."
+    texto="Sube tu STL o 3MF al cotizador. Si no tienes archivo, también puedes pedirnos el diseño."
+    principal={{ texto: 'Abrir el cotizador', href: '/cotizar', evento: 'clic_cta_cotizar' }}
+    secundario={{ texto: 'Ver diseño CAD', href: '/servicios/diseno-cad' }}
+    origen="servicio-impresion"
+  />
+</Base>
