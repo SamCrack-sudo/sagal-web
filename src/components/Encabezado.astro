@@ -142,6 +142,29 @@ const enServicios = ruta.startsWith('/servicios');
     border-bottom: 1px solid var(--c-linea-azul);
   }
 
+  @media (max-width: 959px) {
+    .nav {
+      gap: 12px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .nav__marca :global(.logo__texto) {
+      font-size: 17px;
+    }
+    .nav__marca :global(.logo) {
+      gap: 9px;
+    }
+    .nav__marca :global(svg) {
+      width: 28px;
+      height: 28px;
+    }
+    .nav .nav__alternar {
+      padding: 0 10px;
+      gap: 8px;
+    }
+  }
+
   .nav__marca {
     display: inline-flex;
     align-items: center;
