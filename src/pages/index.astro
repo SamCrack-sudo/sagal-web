@@ -1,0 +1,598 @@
+---
+import Base from '@/layouts/Base.astro';
+import Mecanismo from '@/components/portada/Mecanismo.astro';
+import Icono from '@/components/Icono.astro';
+import Faq from '@/components/Faq.astro';
+import { marca, enlaceCorreo, enlaceWhatsApp } from '@/config/marca';
+import { configPreciosInicial } from '@/config/precios';
+import { negocioLocal, paginaFaq, type PreguntaFrecuente } from '@/lib/seo';
+
+const v = marca.equipos.volumenImpresion;
+const materiales = configPreciosInicial.materiales.filter((m) => m.activo).map((m) => m.nombre);
+const whatsapp = enlaceWhatsApp(`Hola ${marca.nombre}, quiero cotizar un proyecto.`);
+
+const lineas = [
+  {
+    icono: 'impresion',
+    titulo: 'Impresión 3D bajo pedido',
+    texto: 'Prototipos y piezas funcionales en uno o varios colores, en el material que pida cada uso. Sube tu archivo y conoce el precio al instante.',
+    detalle: 'Prototipos, piezas de uso diario, maquetas y series cortas.',
+    href: '/cotizar',
+    cta: 'Cotizar ahora',
+  },
+  {
+    icono: 'empresa',
+    titulo: 'Empresas e industria',
+    texto: 'Repuestos de mantenimiento, ingeniería inversa de piezas descontinuadas, jigs, fixtures y guardas para tu planta.',
+    detalle: 'Menos tiempo de máquina parada y menos dependencia de importaciones.',
+    href: '/empresas',
+    cta: 'Soluciones para empresas',
+  },
+  {
+    icono: 'cad',
+    titulo: 'Diseño CAD',
+    texto: 'Modelamos tu pieza a partir de una idea, un boceto o una pieza que ya tienes. Recibes un modelo listo para fabricar.',
+    detalle: 'Por paquetes: simple, medio o complejo, abonables al pedido de fabricación.',
+    href: '/servicios/diseno-cad',
+    cta: 'Ver paquetes de diseño',
+  },
+  {
+    icono: 'robotica',
+    titulo: 'Robótica y electrónica',
+    texto: 'Mecanismos, sensores, motores y microcontroladores integrados y probados antes de entregarlos.',
+    detalle: 'Prototipos académicos y de emprendimiento, automatización sencilla.',
+    href: '/servicios/robotica-y-electronica',
+    cta: 'Conocer el servicio',
+  },
+] as const;
+
+const preguntas: PreguntaFrecuente[] = [
+  {
+    pregunta: '¿Dónde están ubicados?',
+    respuesta: `Nuestro taller está en ${marca.ubicacion.ciudad}, ${marca.ubicacion.region}, en la ${marca.ubicacion.zona}, cerca de Bogotá y de las zonas industriales de la sabana. [CONFIGURAR: zonas de entrega, recogida y envíos]`,
+  },
+  {
+    pregunta: '¿Cuánto cuesta imprimir una pieza en 3D?',
+    respuesta:
+      'Depende del volumen de la pieza, el material, la calidad y la cantidad. Sube tu archivo STL o 3MF al cotizador y obtienes un precio estimado al instante, que confirmamos al revisar el archivo.',
+  },
+  {
+    pregunta: '¿Pueden reproducir una pieza rota o descontinuada?',
+    respuesta:
+      'Sí. Hacemos ingeniería inversa: medimos la pieza original, la modelamos en CAD, ajustamos lo que haga falta y la imprimimos en un material adecuado para su uso.',
+  },
+  {
+    pregunta: '¿Qué materiales manejan?',
+    respuesta: `Trabajamos con ${materiales.join(', ')}, entre otros, y te recomendamos el adecuado según temperatura, esfuerzo, intemperie o flexibilidad. [CONFIGURAR: catálogo real de materiales]`,
+  },
+  {
+    pregunta: '¿Atienden empresas?',
+    respuesta:
+      'Sí: repuestos, herramentales, guardas y prototipos para mantenimiento y producción. Tenemos un formulario para empresas donde puedes adjuntar planos o fotos. [CONFIGURAR: facturación electrónica]',
+  },
+  {
+    pregunta: '¿Cuánto se demoran?',
+    respuesta:
+      'El cotizador te muestra un plazo estimado en días hábiles según el tiempo de impresión y la cola de trabajo. Si es urgente, puedes elegir una entrega prioritaria.',
+  },
+];
+
+const jsonLd = [negocioLocal(Astro.site), paginaFaq(preguntas)];
+---
+
+<Base
+  titulo={`${marca.nombre} — ${marca.seo.tituloPorDefecto}`}
+  descripcion={`Impresión 3D en ${marca.ubicacion.ciudad} y la Sabana Centro: cotiza tu pieza al instante, repuestos impresos en 3D para empresas en Bogotá y alrededores, diseño CAD, robótica y electrónica.`}
+  mensajeWhatsApp={`Hola ${marca.nombre}, vi su página y quiero cotizar un proyecto.`}
+  pagina="inicio"
+  jsonLd={jsonLd}
+>
+  <div slot="cabecera" class="portada">
+    <div class="portada__texto">
+      <h1 class="titulo-1">
+        {marca.eslogan.map((l) => <span>{l}</span>)}
+      </h1>
+      <p class="portada__entrada">{marca.descripcion}</p>
+      <div class="grupo-botones portada__botones">
+        <a href="/cotizar" class="boton boton--primario" data-evento="clic_cta_cotizar" data-origen="portada">Cotizar impresión 3D</a>
+        <a href="/empresas" class="boton boton--claro">Soy una empresa</a>
+      </div>
+      <ul class="portada__datos" aria-label="Equipos">
+        <li>{marca.equipos.impresora}</li>
+        <li>{marca.equipos.sistemaColor} · multicolor</li>
+        <li>Volumen {v.x} × {v.y} × {v.z} mm</li>
+      </ul>
+    </div>
+    <div class="portada__figura">
+      <Mecanismo />
+    </div>
+  </div>
+
+  <!-- Líneas de negocio -->
+  <section class="seccion" id="servicios" aria-labelledby="servicios-titulo">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <p class="rotulo">01 / Qué hacemos</p>
+        <h2 class="titulo-2" id="servicios-titulo">Llegas con una idea o una pieza rota. Sales con algo que funciona.</h2>
+        <p class="entrada">Cuatro servicios que se complementan, con el mismo criterio de ingeniería en cada uno.</p>
+      </div>
+
+      <div class="lineas">
+        {
+          lineas.map((l) => (
+            <article class="linea item-linea">
+              <span class="item-linea__icono">
+                <Icono nombre={l.icono} />
+              </span>
+              <div class="linea__cuerpo">
+                <h3 class="titulo-3">{l.titulo}</h3>
+                <p>{l.texto}</p>
+                <p class="secundario">{l.detalle}</p>
+                <a href={l.href} class="linea__enlace">
+                  {l.cta} <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+
+      <div class="manifiesto">
+        <p class="manifiesto__lema">Competimos por calidad, no por precio.</p>
+        <p class="manifiesto__texto">
+          Revisamos el diseño contigo antes de fabricar, elegimos el material según el uso de la pieza y no entregamos nada que no hayamos probado. Así
+          cada pieza dura lo que tiene que durar.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA al cotizador -->
+  <section class="seccion seccion--azul cta-cotizador" aria-labelledby="cta-cotizador-titulo">
+    <div class="contenedor cta-cotizador__rejilla">
+      <div>
+        <p class="rotulo">02 / Cotizador</p>
+        <h2 class="titulo-2" id="cta-cotizador-titulo">¿Ya tienes el archivo? Conoce el precio en un minuto.</h2>
+        <p class="entrada">
+          Sube tu STL o 3MF, mira la pieza en 3D con sus medidas reales y elige material, color y acabado. El precio y el plazo se calculan al instante.
+        </p>
+        <div class="grupo-botones">
+          <a href="/cotizar" class="boton boton--primario" data-evento="clic_cta_cotizar" data-origen="portada-cta">Abrir el cotizador</a>
+          <a href="/cotizar" class="boton boton--claro">No tengo archivo</a>
+        </div>
+      </div>
+      <dl class="cta-cotizador__ficha">
+        <div><dt>Formatos</dt><dd>STL · 3MF</dd></div>
+        <div><dt>Medidas</dt><dd>Leídas del archivo</dd></div>
+        <div><dt>Materiales</dt><dd>{materiales.join(' · ')}</dd></div>
+        <div><dt>Colores</dt><dd>Hasta {configPreciosInicial.maxColores} por pieza</dd></div>
+        <div><dt>Resultado</dt><dd>Precio y plazo estimados</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Proceso -->
+  <section class="seccion seccion--alterna" id="proceso" aria-labelledby="proceso-titulo">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <p class="rotulo">03 / Proceso</p>
+        <h2 class="titulo-2" id="proceso-titulo">Cómo trabajamos</h2>
+        <p class="entrada">Sabes en qué va tu proyecto en cada paso, y nada se fabrica sin que lo apruebes.</p>
+      </div>
+      <ol class="pasos">
+        <li class="item-linea item-linea--fuerte">
+          <span class="pasos__numero">1</span>
+          <h3 class="titulo-4">Nos cuentas tu idea</h3>
+          <p>Un archivo, una descripción, fotos, medidas o un boceto. Con eso basta para empezar.</p>
+        </li>
+        <li class="item-linea item-linea--fuerte">
+          <span class="pasos__numero">2</span>
+          <h3 class="titulo-4">Diseñamos y cotizamos</h3>
+          <p>Te mostramos el diseño y un precio claro antes de fabricar cualquier cosa.</p>
+        </li>
+        <li class="item-linea item-linea--fuerte">
+          <span class="pasos__numero">3</span>
+          <h3 class="titulo-4">Fabricamos y probamos</h3>
+          <p>Imprimimos, ensamblamos y verificamos que la pieza cumpla lo acordado.</p>
+        </li>
+        <li class="item-linea item-linea--fuerte">
+          <span class="pasos__numero">4</span>
+          <h3 class="titulo-4">Entregamos</h3>
+          <p>Recibes tu pieza y revisamos juntos el resultado.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Proyectos destacados -->
+  <section class="seccion" id="proyectos" aria-labelledby="proyectos-titulo">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <p class="rotulo">04 / Proyectos</p>
+        <h2 class="titulo-2" id="proyectos-titulo">Trabajos recientes</h2>
+        <p class="entrada">Cada proyecto con su reto, la solución y el resultado.</p>
+      </div>
+      <div class="rejilla rejilla--3">
+        {
+          [1, 2, 3].map(() => (
+            <figure class="proyecto">
+              <div class="pendiente">[FOTO DEL PROYECTO]</div>
+              <figcaption>
+                <strong>[NOMBRE DEL PROYECTO]</strong>
+                <span>[SERVICIO Y MATERIAL]</span>
+              </figcaption>
+            </figure>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Confianza -->
+  <section class="seccion seccion--alterna" aria-labelledby="confianza-titulo">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <p class="rotulo">05 / Por qué confiar</p>
+        <h2 class="titulo-2" id="confianza-titulo">Criterio de ingeniería en cada pieza</h2>
+      </div>
+      <div class="confianza">
+        <div class="confianza__bloque">
+          <h3 class="titulo-3">Quién está detrás</h3>
+          <p>
+            {marca.nombre} lo dirige un estudiante de ingeniería mecatrónica con experiencia en análisis de procesos industriales y coordinación de
+            mantenimiento en una planta de alimentos, y docente de programación. Por eso pensamos cada pieza como parte de una máquina: cómo se monta, qué
+            esfuerzos soporta y cuánto debe durar.
+          </p>
+          <a href="/nosotros" class="enlace">Conoce el taller</a>
+        </div>
+        <div class="confianza__bloque">
+          <h3 class="titulo-3">Control de calidad</h3>
+          <ul class="lista-marcas">
+            <li>Revisamos el archivo y la orientación antes de imprimir.</li>
+            <li>Elegimos el material según temperatura, esfuerzo y ambiente.</li>
+            <li>Verificamos medidas críticas y ajuste antes de entregar.</li>
+            <li>Si algo no funciona, lo corregimos.</li>
+          </ul>
+        </div>
+        <div class="confianza__bloque">
+          <h3 class="titulo-3">Equipos</h3>
+          <dl class="especificaciones">
+            <dt>Impresora</dt>
+            <dd>{marca.equipos.impresora}</dd>
+            <dt>Multicolor y multimaterial</dt>
+            <dd>{marca.equipos.sistemaColor}</dd>
+            <dt>Volumen de impresión</dt>
+            <dd>{v.x} × {v.y} × {v.z} mm</dd>
+            <dt>Materiales</dt>
+            <dd>{materiales.join(', ')}</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="faq-portada">
+        <h3 class="titulo-3">Preguntas frecuentes</h3>
+        <Faq preguntas={preguntas} />
+      </div>
+    </div>
+  </section>
+
+  <!-- Próximamente: catálogo -->
+  <section class="seccion seccion--acento catalogo" aria-labelledby="catalogo-titulo">
+    <div class="contenedor catalogo__rejilla">
+      <div>
+        <h2 class="titulo-2" id="catalogo-titulo">Pronto: productos listos para comprar</h2>
+        <p>Estamos preparando un catálogo de productos estándar, para que no siempre tengas que esperar un diseño a medida.</p>
+      </div>
+      <a href={enlaceCorreo('Avísenme del catálogo', 'Quiero que me avisen cuando el catálogo esté disponible.')} class="boton boton--oscuro" data-evento="suscripcion" data-origen="catalogo">
+        Quiero que me avisen
+      </a>
+    </div>
+  </section>
+
+  <!-- CTA final -->
+  <section class="seccion seccion--azul" aria-labelledby="final-titulo">
+    <div class="contenedor final">
+      <div>
+        <p class="rotulo">06 / Contacto</p>
+        <h2 class="titulo-2" id="final-titulo">Cuéntanos qué necesitas</h2>
+        <p class="entrada">Escríbenos con tu idea y te respondemos con una propuesta y un precio.</p>
+      </div>
+      <div class="grupo-botones">
+        <a href="/cotizar" class="boton boton--primario" data-evento="clic_cta_cotizar" data-origen="portada-final">Cotizar impresión 3D</a>
+        <a href="/contacto" class="boton boton--claro">Escribirnos</a>
+        {
+          whatsapp && (
+            <a href={whatsapp} class="boton boton--claro" target="_blank" rel="noopener" data-evento="clic_whatsapp" data-origen="portada-final">
+              WhatsApp
+            </a>
+          )
+        }
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .portada {
+    display: grid;
+    gap: 40px 56px;
+    align-items: center;
+    padding: clamp(40px, 7vw, 96px) 0;
+  }
+
+  @media (min-width: 960px) {
+    .portada {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    }
+  }
+
+  .portada__texto {
+    max-width: 640px;
+  }
+
+  .portada h1 {
+    color: var(--c-sobre-azul);
+  }
+
+  .portada h1 span {
+    display: block;
+  }
+
+  .portada__entrada {
+    margin-top: 28px;
+    max-width: 34em;
+    font-size: var(--f-lead);
+    color: var(--c-sobre-azul-2);
+  }
+
+  .portada__botones {
+    margin-top: 36px;
+  }
+
+  .portada__datos {
+    list-style: none;
+    margin: 40px 0 0;
+    padding: 16px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 0;
+    border-top: 1px solid var(--c-linea-azul);
+    font-size: var(--f-mini);
+    font-stretch: var(--f-ancho-plano);
+    letter-spacing: 0.04em;
+    color: var(--c-sobre-azul-3);
+  }
+
+  .portada__datos li:not(:last-child)::after {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin: 0 14px 1px;
+    background: var(--c-acento);
+  }
+
+  .portada__figura {
+    min-width: 0;
+  }
+
+  .lineas {
+    display: grid;
+    gap: 0 64px;
+  }
+
+  @media (min-width: 880px) {
+    .lineas {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .linea {
+    display: flex;
+    gap: 24px;
+    padding-bottom: var(--e-6);
+  }
+
+  .linea .item-linea__icono {
+    flex: none;
+    margin: 0;
+  }
+
+  .linea__cuerpo {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+
+  .linea__cuerpo > p:first-of-type {
+    color: var(--c-texto-2);
+  }
+
+  .linea__enlace {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--objetivo-tactil);
+    font-weight: 650;
+    color: var(--c-azul);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  @media (max-width: 480px) {
+    .linea {
+      flex-direction: column;
+      gap: 12px;
+    }
+  }
+
+  .manifiesto {
+    display: grid;
+    gap: 24px 64px;
+    margin-top: 56px;
+    padding-top: 40px;
+    border-top: 3px solid var(--c-azul);
+  }
+
+  @media (min-width: 880px) {
+    .manifiesto {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .manifiesto__lema {
+    font-size: clamp(1.75rem, 2.8vw, 2.4rem);
+    line-height: 1.15;
+    font-weight: 700;
+    font-stretch: 112%;
+    color: var(--c-texto-fuerte);
+  }
+
+  .manifiesto__texto {
+    font-size: 1.125rem;
+    color: var(--c-texto-2);
+    max-width: 34em;
+  }
+
+  .cta-cotizador__rejilla {
+    display: grid;
+    gap: 40px 64px;
+    align-items: center;
+  }
+
+  .cta-cotizador__rejilla > div {
+    display: grid;
+    gap: 20px;
+  }
+
+  @media (min-width: 960px) {
+    .cta-cotizador__rejilla {
+      grid-template-columns: 1.3fr 1fr;
+    }
+  }
+
+  .cta-cotizador__ficha {
+    margin: 0;
+    border: 1px solid var(--c-linea-azul);
+    font-size: var(--f-pequeno);
+  }
+
+  .cta-cotizador__ficha > div {
+    display: grid;
+    grid-template-columns: 9em 1fr;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--c-linea-azul);
+  }
+
+  .cta-cotizador__ficha > div:last-child {
+    border-bottom: 0;
+  }
+
+  .cta-cotizador__ficha dt {
+    color: var(--c-sobre-azul-3);
+    font-stretch: var(--f-ancho-plano);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: var(--f-mini);
+    padding-top: 2px;
+  }
+
+  .cta-cotizador__ficha dd {
+    margin: 0;
+    color: var(--c-sobre-azul);
+    font-weight: 600;
+  }
+
+  .proyecto {
+    margin: 0;
+  }
+
+  .proyecto figcaption {
+    display: grid;
+    margin-top: 14px;
+  }
+
+  .proyecto figcaption strong {
+    color: var(--c-texto-fuerte);
+  }
+
+  .proyecto figcaption span {
+    font-size: var(--f-pequeno);
+    color: var(--c-texto-3);
+  }
+
+  .confianza {
+    display: grid;
+    gap: 40px 48px;
+  }
+
+  @media (min-width: 960px) {
+    .confianza {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .confianza__bloque {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+    padding-top: 24px;
+    border-top: 2px solid var(--c-azul);
+  }
+
+  .confianza__bloque > p {
+    color: var(--c-texto-2);
+  }
+
+  .confianza__bloque .enlace {
+    justify-self: start;
+    font-weight: 650;
+    color: var(--c-azul);
+  }
+
+  .faq-portada {
+    display: grid;
+    gap: 16px;
+    margin-top: 72px;
+    max-width: 880px;
+  }
+
+  .catalogo__rejilla {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px 64px;
+  }
+
+  .catalogo__rejilla > div {
+    flex: 1 1 480px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .catalogo .titulo-2 {
+    font-size: clamp(1.75rem, 2.8vw, 2.4rem);
+  }
+
+  .catalogo p {
+    font-size: 1.125rem;
+    max-width: 34em;
+  }
+
+  .final {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px 64px;
+  }
+
+  .final > div:first-child {
+    flex: 1 1 480px;
+    display: grid;
+    gap: 16px;
+  }
+</style>

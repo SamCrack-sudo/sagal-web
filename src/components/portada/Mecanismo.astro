@@ -1,0 +1,143 @@
+---
+/**
+ * Ilustración del héroe. El SVG (plano técnico del diseño de referencia) es el
+ * estado por defecto y el respaldo para equipos débiles o con movimiento
+ * reducido. La isla 3D lo reemplaza cuando el equipo lo permite.
+ * La rejilla y el cajetín se mantienen siempre: son parte del plano.
+ */
+import HeroMecanismo from '@/components/islas/portada/HeroMecanismo';
+import { marca } from '@/config/marca';
+---
+
+<div class="mecanismo" data-mecanismo>
+  <svg class="mecanismo__plano" viewBox="0 0 520 440" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="sr-rejilla" width="20" height="20" patternUnits="userSpaceOnUse">
+        <path d="M20 0H0V20" fill="none" stroke="rgba(233,238,245,0.08)" stroke-width="1"></path>
+      </pattern>
+      <marker id="sr-flecha" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 1L10 5L0 9z" fill="#E9EEF5"></path>
+      </marker>
+    </defs>
+    <rect x="0" y="0" width="520" height="440" fill="url(#sr-rejilla)"></rect>
+
+    <g class="mecanismo__dibujo">
+      <g fill="none" stroke="rgba(233,238,245,0.45)" stroke-width="0.8" stroke-dasharray="16 4 3 4">
+        <line x1="62" y1="220" x2="378" y2="220"></line>
+        <line x1="220" y1="62" x2="220" y2="378"></line>
+        <circle cx="220" cy="220" r="88"></circle>
+        <line x1="300" y1="129" x2="460" y2="129"></line>
+        <line x1="380" y1="48" x2="380" y2="210"></line>
+      </g>
+      <g fill="none">
+        <circle cx="220" cy="220" r="128" stroke="rgba(233,238,245,0.24)" stroke-width="22" stroke-dasharray="15.5 18.01"></circle>
+        <circle cx="220" cy="220" r="117" stroke="#E9EEF5" stroke-width="1.6"></circle>
+        <circle cx="220" cy="220" r="58" stroke="#E9EEF5" stroke-width="1.4"></circle>
+        <circle cx="220" cy="220" r="22" stroke="#E9EEF5" stroke-width="1.6"></circle>
+        <path d="M214 198.8V192H226V198.8" stroke="#E9EEF5" stroke-width="1.6"></path>
+        <circle cx="308" cy="220" r="13" stroke="#E9EEF5" stroke-width="1.4"></circle>
+        <circle cx="264" cy="296.2" r="13" stroke="#E9EEF5" stroke-width="1.4"></circle>
+        <circle cx="176" cy="296.2" r="13" stroke="#E9EEF5" stroke-width="1.4"></circle>
+        <circle cx="132" cy="220" r="13" stroke="#E9EEF5" stroke-width="1.4"></circle>
+        <circle cx="176" cy="143.8" r="13" stroke="#E9EEF5" stroke-width="1.4"></circle>
+        <circle cx="264" cy="143.8" r="13" stroke="#E9EEF5" stroke-width="1.4"></circle>
+      </g>
+      <g transform="rotate(18 380 129)" fill="none">
+        <circle cx="380" cy="129" r="56" stroke="#FF6A13" stroke-opacity="0.92" stroke-width="22" stroke-dasharray="16 19.19"></circle>
+        <circle cx="380" cy="129" r="45" stroke="#E9EEF5" stroke-width="1.6"></circle>
+        <circle cx="380" cy="129" r="26" stroke="#E9EEF5" stroke-width="1" stroke-dasharray="4 3"></circle>
+        <circle cx="380" cy="129" r="12" stroke="#E9EEF5" stroke-width="1.6"></circle>
+      </g>
+      <g fill="none" stroke="#E9EEF5" stroke-width="0.9">
+        <line x1="81" y1="228" x2="81" y2="412"></line>
+        <line x1="359" y1="228" x2="359" y2="412"></line>
+        <line x1="81" y1="405" x2="359" y2="405" marker-start="url(#sr-flecha)" marker-end="url(#sr-flecha)"></line>
+      </g>
+      <g fill="#E9EEF5" style="font-family: var(--f-familia); font-stretch: 82%">
+        <text x="220" y="397" text-anchor="middle" style="font-size: 14px; font-weight: 500">Ø 278</text>
+        <text x="96" y="352" style="font-size: 12px">Z = 24</text>
+        <text x="456" y="66" style="font-size: 12px">Z = 10</text>
+      </g>
+    </g>
+
+  </svg>
+  <HeroMecanismo client:visible />
+  <svg class="mecanismo__cajetin" viewBox="0 0 520 440" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <rect x="376" y="352" width="136" height="76" fill="#16325C"></rect>
+    <g fill="none" stroke="#E9EEF5" stroke-width="1">
+      <rect x="376" y="352" width="136" height="76"></rect>
+      <line x1="376" y1="380" x2="512" y2="380"></line>
+      <line x1="376" y1="404" x2="512" y2="404"></line>
+      <line x1="444" y1="380" x2="444" y2="428"></line>
+    </g>
+    <g fill="#E9EEF5" style="font-family: var(--f-familia); font-stretch: 85%">
+      <text x="384" y="371" style="font-size: 12px; font-weight: 700; letter-spacing: 0.08em">{marca.nombre.toUpperCase()}</text>
+      <text x="384" y="397" style="font-size: 10px">Plano {marca.prefijo}-001</text>
+      <text x="452" y="397" style="font-size: 10px">Rev. A</text>
+      <text x="384" y="421" style="font-size: 10px">Escala 1:2</text>
+      <text x="452" y="421" style="font-size: 10px">{marca.ubicacion.ciudad}</text>
+    </g>
+  </svg>
+  <p class="mecanismo__pista">Desplázate para ver el despiece</p>
+</div>
+
+<style>
+  .mecanismo {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 520 / 440;
+  }
+
+  .mecanismo__plano,
+  .mecanismo__cajetin {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .mecanismo__cajetin {
+    pointer-events: none;
+  }
+
+  .mecanismo__dibujo {
+    transition: opacity 600ms var(--curva);
+  }
+
+  .mecanismo :global(.mecanismo__lienzo) {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 900ms var(--curva);
+  }
+
+  .mecanismo :global(.mecanismo__lienzo canvas) {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .mecanismo[data-estado='listo'] .mecanismo__dibujo {
+    opacity: 0;
+  }
+
+  .mecanismo[data-estado='listo'] :global(.mecanismo__lienzo) {
+    opacity: 1;
+  }
+
+  .mecanismo__pista {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    margin: 0;
+    font-size: var(--f-mini);
+    font-stretch: var(--f-ancho-plano);
+    letter-spacing: 0.06em;
+    color: var(--c-sobre-azul-3);
+    opacity: 0;
+    transition: opacity 600ms var(--curva) 1.2s;
+  }
+
+  .mecanismo[data-estado='listo'] .mecanismo__pista {
+    opacity: 1;
+  }
+</style>
