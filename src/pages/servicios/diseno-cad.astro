@@ -1,0 +1,219 @@
+---
+import Base from '@/layouts/Base.astro';
+import CabeceraPagina from '@/components/CabeceraPagina.astro';
+import BandaCta from '@/components/BandaCta.astro';
+import Faq from '@/components/Faq.astro';
+import { marca } from '@/config/marca';
+import { paquetesCad, abonoDiseno } from '@/config/servicios';
+import { migas, paginaFaq, servicio, type PreguntaFrecuente } from '@/lib/seo';
+
+const preguntas: PreguntaFrecuente[] = [
+  {
+    pregunta: '¿Qué necesito para pedir un diseño?',
+    respuesta:
+      'Una descripción de lo que necesitas y, si existen, fotos, un boceto o medidas. Si es un repuesto, lo ideal es tener la pieza original o fotos junto a una regla o calibrador.',
+  },
+  {
+    pregunta: '¿Cómo sé qué paquete necesito?',
+    respuesta:
+      'No tienes que saberlo: envíanos la solicitud y te decimos en qué paquete encaja tu pieza antes de empezar. Nada se cobra sin tu aprobación.',
+  },
+  {
+    pregunta: '¿El archivo queda para mí?',
+    respuesta: 'Sí, te entregamos los archivos del diseño para que los uses. [CONFIGURAR: condiciones de propiedad intelectual y formatos de entrega]',
+  },
+  {
+    pregunta: '¿Hacen ingeniería inversa?',
+    respuesta:
+      'Sí: medimos la pieza original, la modelamos y, si hace falta, mejoramos el diseño (refuerzos, tolerancias, material) para que dure más que la original.',
+  },
+];
+
+const jsonLd = [
+  servicio(
+    {
+      nombre: 'Diseño CAD e ingeniería inversa',
+      descripcion: 'Modelado 3D de piezas a partir de ideas, bocetos o piezas existentes, listo para fabricar.',
+      ruta: '/servicios/diseno-cad',
+      tipo: 'Diseño CAD',
+    },
+    Astro.site,
+  ),
+  paginaFaq(preguntas),
+  migas(
+    [
+      { nombre: 'Servicios', ruta: '/servicios/diseno-cad' },
+      { nombre: 'Diseño CAD', ruta: '/servicios/diseno-cad' },
+    ],
+    Astro.site,
+  ),
+];
+---
+
+<Base
+  titulo="Diseño CAD e ingeniería inversa de piezas"
+  descripcion={`Diseño CAD por paquetes en ${marca.ubicacion.ciudad}: modelamos tu pieza a partir de una idea, un boceto o una pieza rota, lista para imprimir en 3D o fabricar.`}
+  mensajeWhatsApp={`Hola ${marca.nombre}, necesito que me diseñen una pieza en CAD.`}
+  pagina="servicio-cad"
+  jsonLd={jsonLd}
+>
+  <CabeceraPagina
+    slot="cabecera"
+    rotulo="Servicio"
+    titulo="Diseño CAD: de la idea al archivo listo para fabricar"
+    entrada="Modelamos tu pieza a partir de una idea, un boceto, un plano o una pieza que ya tienes. Pensamos en cómo se va a fabricar, montar y usar."
+    migas={[{ nombre: 'Servicios', ruta: '/servicios/diseno-cad' }, { nombre: 'Diseño CAD', ruta: '/servicios/diseno-cad' }]}
+  >
+    <div class="grupo-botones">
+      <a href="/cotizar" class="boton boton--primario">Solicitar un diseño</a>
+      <a href="#paquetes" class="boton boton--claro">Ver paquetes</a>
+    </div>
+  </CabeceraPagina>
+
+  <section class="seccion" id="paquetes" aria-labelledby="paquetes-titulo">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <p class="rotulo">Paquetes</p>
+        <h2 class="titulo-2" id="paquetes-titulo">Tres niveles, según la complejidad de la pieza</h2>
+        <p class="entrada">{abonoDiseno}</p>
+      </div>
+      <div class="paquetes">
+        {
+          paquetesCad.map((p) => (
+            <article class="paquete" aria-labelledby={`paquete-${p.id}`}>
+              <header class="paquete__cabecera">
+                <h3 class="titulo-3" id={`paquete-${p.id}`}>
+                  {p.nombre}
+                </h3>
+                <p class="paquete__precio">{p.precio}</p>
+              </header>
+              <p>{p.para}</p>
+              <div>
+                <h4 class="paquete__subtitulo">Ejemplos</h4>
+                <ul class="lista-marcas">
+                  {p.ejemplos.map((e) => (
+                    <li>{e}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 class="paquete__subtitulo">Incluye</h4>
+                <ul class="lista-marcas">
+                  {p.incluye.map((e) => (
+                    <li>{e}</li>
+                  ))}
+                </ul>
+              </div>
+              <dl class="especificaciones">
+                <dt>Revisiones</dt>
+                <dd>{p.revisiones}</dd>
+                <dt>Plazo</dt>
+                <dd>{p.plazo}</dd>
+              </dl>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion seccion--alterna" aria-labelledby="proceso-titulo">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <p class="rotulo">Proceso</p>
+        <h2 class="titulo-2" id="proceso-titulo">Cómo diseñamos tu pieza</h2>
+      </div>
+      <ol class="pasos">
+        <li class="item-linea item-linea--fuerte">
+          <span class="pasos__numero">1</span>
+          <h3 class="titulo-4">Entendemos el uso</h3>
+          <p>Dónde va la pieza, qué esfuerzos soporta, con qué encaja y en qué ambiente trabaja.</p>
+        </li>
+        <li class="item-linea item-linea--fuerte">
+          <span class="pasos__numero">2</span>
+          <h3 class="titulo-4">Medimos y modelamos</h3>
+          <p>Con tus medidas, fotos o la pieza original construimos el modelo 3D.</p>
+        </li>
+        <li class="item-linea item-linea--fuerte">
+          <span class="pasos__numero">3</span>
+          <h3 class="titulo-4">Revisas y ajustamos</h3>
+          <p>Te mostramos el diseño y hacemos los cambios incluidos en tu paquete.</p>
+        </li>
+        <li class="item-linea item-linea--fuerte">
+          <span class="pasos__numero">4</span>
+          <h3 class="titulo-4">Entregamos o fabricamos</h3>
+          <p>Recibes los archivos o la pieza impresa, con el diseño abonado al pedido.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="faq-titulo">
+    <div class="contenedor contenedor--estrecho">
+      <div class="cabecera-seccion">
+        <h2 class="titulo-2" id="faq-titulo">Preguntas frecuentes</h2>
+      </div>
+      <Faq preguntas={preguntas} />
+    </div>
+  </section>
+
+  <BandaCta
+    titulo="Cuéntanos qué pieza necesitas"
+    texto="Descríbela, adjunta fotos y medidas, y te decimos qué paquete aplica antes de empezar."
+    principal={{ texto: 'Solicitar un diseño', href: '/cotizar' }}
+    secundario={{ texto: 'Es para una empresa', href: '/empresas' }}
+    origen="servicio-cad"
+  />
+</Base>
+
+<style>
+  .paquetes {
+    display: grid;
+    gap: 24px;
+  }
+
+  @media (min-width: 960px) {
+    .paquetes {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0;
+    }
+    .paquete + .paquete {
+      border-left: 0;
+    }
+  }
+
+  .paquete {
+    display: grid;
+    gap: 20px;
+    align-content: start;
+    padding: 28px;
+    border: 1px solid var(--c-linea);
+    border-top: 3px solid var(--c-azul);
+    background: var(--c-blanco);
+  }
+
+  .paquete > p {
+    color: var(--c-texto-2);
+  }
+
+  .paquete__cabecera {
+    display: grid;
+    gap: 6px;
+  }
+
+  .paquete__precio {
+    font-weight: 700;
+    color: var(--c-texto-fuerte);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .paquete__subtitulo {
+    margin-bottom: 10px;
+    font-size: var(--f-mini);
+    font-weight: 650;
+    font-stretch: var(--f-ancho-plano);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-texto-3);
+  }
+</style>

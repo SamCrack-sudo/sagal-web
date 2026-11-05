@@ -999,3 +999,29 @@ fieldset.grupo > legend {
 .seccion--azul .pasos__numero {
   color: var(--c-acento);
 }
+
+/* ── Composiciones de páginas interiores ──────────────────────────────── */
+.dos-columnas {
+  display: grid;
+  gap: 40px 72px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .dos-columnas {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+}
+
+.dos-columnas__texto {
+  display: grid;
+  gap: 18px;
+}
+
+.nota-demo {
+  margin-top: 16px;
+}
+
+.seccion--azul .campo__opcional {
+  color: var(--c-sobre-azul-3);
+}

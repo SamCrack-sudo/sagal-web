@@ -2,10 +2,9 @@
 /**
  * Ilustración del héroe. El SVG (plano técnico del diseño de referencia) es el
  * estado por defecto y el respaldo para equipos débiles o con movimiento
- * reducido. La isla 3D lo reemplaza cuando el equipo lo permite.
+ * reducido. El script de abajo lo reemplaza por el 3D cuando el equipo lo permite.
  * La rejilla y el cajetín se mantienen siempre: son parte del plano.
  */
-import HeroMecanismo from '@/components/islas/portada/HeroMecanismo';
 import { marca } from '@/config/marca';
 ---
 
@@ -61,7 +60,7 @@ import { marca } from '@/config/marca';
     </g>
 
   </svg>
-  <HeroMecanismo client:visible />
+  <div class="mecanismo__lienzo" aria-hidden="true"></div>
   <svg class="mecanismo__cajetin" viewBox="0 0 520 440" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
     <rect x="376" y="352" width="136" height="76" fill="#16325C"></rect>
     <g fill="none" stroke="#E9EEF5" stroke-width="1">
@@ -80,6 +79,11 @@ import { marca } from '@/config/marca';
   </svg>
   <p class="mecanismo__pista">Desplázate para ver el despiece</p>
 </div>
+
+<script>
+  import { iniciarMecanismo } from '@/components/islas/portada/iniciarMecanismo';
+  document.querySelectorAll<HTMLElement>('[data-mecanismo]').forEach(iniciarMecanismo);
+</script>
 
 <style>
   .mecanismo {
@@ -104,14 +108,14 @@ import { marca } from '@/config/marca';
     transition: opacity 600ms var(--curva);
   }
 
-  .mecanismo :global(.mecanismo__lienzo) {
+  .mecanismo__lienzo {
     position: absolute;
     inset: 0;
     opacity: 0;
     transition: opacity 900ms var(--curva);
   }
 
-  .mecanismo :global(.mecanismo__lienzo canvas) {
+  .mecanismo__lienzo :global(canvas) {
     width: 100% !important;
     height: 100% !important;
   }
@@ -120,7 +124,7 @@ import { marca } from '@/config/marca';
     opacity: 0;
   }
 
-  .mecanismo[data-estado='listo'] :global(.mecanismo__lienzo) {
+  .mecanismo[data-estado='listo'] .mecanismo__lienzo {
     opacity: 1;
   }
 

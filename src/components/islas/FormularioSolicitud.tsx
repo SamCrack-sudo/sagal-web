@@ -125,8 +125,8 @@ export default function FormularioSolicitud({ variante = 'contacto', tema = 'cla
           <fieldset className="grupo">
             <legend>Lo que necesitas</legend>
             <div className="formulario__pila">
-              <div className="fila-campos fila-campos--3">
-                <CampoSeleccion etiqueta="Tipo de pieza" name="tipoPieza" opcional opciones={TIPOS_PIEZA} defaultValue="" />
+              <CampoSeleccion etiqueta="Tipo de pieza" name="tipoPieza" opcional opciones={TIPOS_PIEZA} defaultValue="" />
+              <div className="fila-campos fila-campos--2">
                 <CampoTexto etiqueta="Cantidad" name="cantidad" opcional maxLength={40} placeholder="Ej.: 4 unidades" />
                 <CampoSeleccion etiqueta="Urgencia" name="urgencia" opcional opciones={URGENCIAS} defaultValue="Sin urgencia" />
               </div>

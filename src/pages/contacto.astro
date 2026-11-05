@@ -1,0 +1,130 @@
+---
+import Base from '@/layouts/Base.astro';
+import CabeceraPagina from '@/components/CabeceraPagina.astro';
+import FormularioSolicitud from '@/components/islas/FormularioSolicitud';
+import { marca, enlaceInstagram, enlaceWhatsApp, esMarcador } from '@/config/marca';
+import { migas, negocioLocal } from '@/lib/seo';
+
+const whatsapp = enlaceWhatsApp(`Hola ${marca.nombre}, quiero hacer una consulta.`);
+const instagram = enlaceInstagram();
+const jsonLd = [negocioLocal(Astro.site), migas([{ nombre: 'Contacto', ruta: '/contacto' }], Astro.site)];
+---
+
+<Base
+  titulo="Contacto"
+  descripcion={`Escríbenos para cotizar diseño CAD, impresión 3D, robótica o electrónica. Taller en ${marca.ubicacion.ciudad}, ${marca.ubicacion.region}.`}
+  mensajeWhatsApp={`Hola ${marca.nombre}, quiero hacer una consulta.`}
+  pagina="contacto"
+  jsonLd={jsonLd}
+>
+  <CabeceraPagina
+    slot="cabecera"
+    rotulo="Contacto"
+    titulo="Cuéntanos qué necesitas"
+    entrada="Escríbenos con tu idea y te respondemos con una propuesta y un precio. Si ya tienes el archivo 3D, el cotizador te da el precio al instante."
+    migas={[{ nombre: 'Contacto', ruta: '/contacto' }]}
+  />
+
+  <section class="seccion seccion--azul contacto" aria-label="Formulario y datos de contacto">
+    <div class="contenedor contacto__rejilla">
+      <div class="contacto__datos">
+        <h2 class="titulo-3">Datos de contacto</h2>
+        <dl>
+          <div>
+            <dt>Correo</dt>
+            <dd><a href={`mailto:${marca.contacto.correo}`} class="enlace">{marca.contacto.correo}</a></dd>
+          </div>
+          <div>
+            <dt>WhatsApp</dt>
+            <dd>
+              {
+                whatsapp ? (
+                  <a href={whatsapp} class="enlace" target="_blank" rel="noopener" data-evento="clic_whatsapp" data-origen="contacto">
+                    +{marca.contacto.whatsapp.replace(/\D/g, '')}
+                  </a>
+                ) : (
+                  marca.contacto.whatsapp
+                )
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Instagram</dt>
+            <dd>
+              {
+                instagram ? (
+                  <a href={instagram} class="enlace" rel="noopener">
+                    @{marca.contacto.instagram}
+                  </a>
+                ) : (
+                  `[@${marca.contacto.instagram.replace(/[[\]]/g, '')}]`
+                )
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Ubicación</dt>
+            <dd>
+              {esMarcador(marca.ubicacion.direccion) ? '' : `${marca.ubicacion.direccion}, `}
+              {marca.ubicacion.ciudad}, {marca.ubicacion.region}, {marca.ubicacion.pais}
+            </dd>
+          </div>
+          <div>
+            <dt>Horario</dt>
+            <dd>{marca.ubicacion.horario}</dd>
+          </div>
+        </dl>
+        <div class="contacto__atajos">
+          <a href="/cotizar" class="boton boton--primario" data-evento="clic_cta_cotizar" data-origen="contacto">Cotizar con archivo</a>
+          <a href="/empresas#solicitud" class="boton boton--claro">Solicitud para empresas</a>
+        </div>
+      </div>
+
+      <div class="marco contacto__formulario">
+        <FormularioSolicitud client:visible variante="contacto" tema="azul" />
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .contacto__rejilla {
+    display: grid;
+    gap: 56px 80px;
+  }
+
+  @media (min-width: 960px) {
+    .contacto__rejilla {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    }
+  }
+
+  .contacto__datos {
+    display: grid;
+    gap: 32px;
+    align-content: start;
+  }
+
+  .contacto__datos dl {
+    margin: 0;
+    display: grid;
+    gap: 22px;
+  }
+
+  .contacto__datos dt {
+    font-size: var(--f-pequeno);
+    color: var(--c-sobre-azul-3);
+  }
+
+  .contacto__datos dd {
+    margin: 2px 0 0;
+    font-size: 1.1875rem;
+    overflow-wrap: anywhere;
+  }
+
+  .contacto__atajos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+</style>

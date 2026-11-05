@@ -127,6 +127,10 @@ export function CampoArchivos({
   );
 }
 
+function CampoCiudad() {
+  return <CampoTexto etiqueta="Ciudad o municipio" name="ciudad" autoComplete="address-level2" opcional maxLength={160} placeholder="Cajicá, Chía, Bogotá…" />;
+}
+
 /** Datos de contacto comunes a todos los formularios. */
 export function CamposContacto({
   errores,
@@ -167,7 +171,7 @@ export function CamposContacto({
           ayuda="Te escribimos por aquí si es más rápido."
         />
         {tipoFijo ? (
-          <input type="hidden" name="tipoCliente" value={tipoFijo} />
+          mostrarCiudad && <CampoCiudad />
         ) : (
           <CampoSeleccion
             etiqueta="Eres"
@@ -178,9 +182,8 @@ export function CamposContacto({
           />
         )}
       </div>
-      {mostrarCiudad && (
-        <CampoTexto etiqueta="Ciudad o municipio" name="ciudad" autoComplete="address-level2" opcional maxLength={160} placeholder="Cajicá, Chía, Bogotá…" />
-      )}
+      {tipoFijo && <input type="hidden" name="tipoCliente" value={tipoFijo} />}
+      {!tipoFijo && mostrarCiudad && <CampoCiudad />}
     </>
   );
 }
