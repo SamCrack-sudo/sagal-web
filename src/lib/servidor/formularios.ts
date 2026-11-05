@@ -84,7 +84,7 @@ export async function prepararContexto(
     return json({ ok: false, mensaje: 'Revisa los campos marcados.', errores: todos }, 422);
   }
 
-  let origen: OrigenVisita | null = null;
+  let origen: OrigenVisita | null;
   try {
     const crudo = JSON.parse(form.campos.origen ?? 'null') as { primero?: OrigenVisita; sesion?: OrigenVisita } | null;
     origen = crudo?.sesion ?? crudo?.primero ?? null;

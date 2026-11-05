@@ -845,3 +845,157 @@ fieldset.grupo > legend {
   height: 0;
   border-top: 1px solid currentColor;
 }
+
+/* ── Formularios (islas React) ────────────────────────────────────────── */
+.formulario {
+  display: grid;
+  gap: var(--e-6);
+  min-width: 0;
+}
+
+.formulario__pila {
+  display: grid;
+  gap: var(--e-5);
+  min-width: 0;
+}
+
+.formulario__desplegable {
+  border-top: 1px solid var(--c-linea);
+  border-bottom: 1px solid var(--c-linea);
+}
+
+.formulario__desplegable > summary {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  font-weight: 650;
+  color: var(--c-texto-fuerte);
+  cursor: pointer;
+}
+
+.formulario__desplegable[open] > summary {
+  margin-bottom: var(--e-4);
+}
+
+.formulario__desplegable > .formulario__pila {
+  padding-bottom: var(--e-5);
+}
+
+.control--archivo {
+  padding: 10px;
+  min-height: auto;
+  font-size: var(--f-pequeno);
+  background: var(--c-fondo);
+  border-style: dashed;
+}
+
+.control--archivo::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 14px;
+  border: 1px solid var(--c-azul);
+  border-radius: var(--radio);
+  background: var(--c-blanco);
+  color: var(--c-azul);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.seccion--azul .control--archivo::file-selector-button {
+  background: transparent;
+  border-color: var(--c-sobre-azul-2);
+  color: var(--c-sobre-azul);
+}
+
+.seccion--azul .formulario__desplegable {
+  border-color: var(--c-linea-azul);
+}
+
+.seccion--azul .formulario__desplegable > summary,
+.seccion--azul fieldset.grupo > legend {
+  color: var(--c-sobre-azul);
+}
+
+.seccion--azul .aviso {
+  color: var(--c-texto);
+}
+
+.confirmacion {
+  display: grid;
+  gap: var(--e-4);
+  padding: clamp(24px, 4vw, 40px);
+  border: 1px solid var(--c-linea);
+  border-top: 3px solid var(--c-ok);
+  background: var(--c-blanco);
+  color: var(--c-texto);
+}
+
+.confirmacion:focus {
+  outline: none;
+}
+
+.confirmacion :is(h2, h3) {
+  color: var(--c-texto-fuerte);
+}
+
+.confirmacion__codigo {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.turnstile:empty {
+  display: none;
+}
+
+/* ── Variantes de contenedor y pasos ──────────────────────────────────── */
+.contenedor--amplio {
+  max-width: var(--ancho-max-amplio);
+}
+
+.contenedor--estrecho {
+  max-width: 880px;
+}
+
+.pasos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e-5) var(--e-6);
+}
+
+@media (min-width: 720px) {
+  .pasos {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+.pasos > li {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.pasos p {
+  color: var(--c-texto-2);
+}
+
+.pasos__numero {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 2.5rem;
+  line-height: 1;
+  font-weight: 750;
+  font-stretch: 120%;
+  color: var(--c-azul);
+  font-variant-numeric: tabular-nums;
+}
+
+.seccion--azul .pasos p {
+  color: var(--c-sobre-azul-2);
+}
+
+.seccion--azul .pasos__numero {
+  color: var(--c-acento);
+}

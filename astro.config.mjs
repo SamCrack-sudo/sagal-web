@@ -28,6 +28,7 @@ export default defineConfig({
     }),
   ],
   trailingSlash: 'never',
+  devToolbar: { enabled: false },
   build: { format: 'file' },
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
   env: {
