@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { strToU8, zipSync } from 'fflate';
-import { calcularMetricas, leerModelo, verificarVolumen, volumenSospechoso, ErrorMalla } from './index';
+import { calcularMetricas, leerModelo, verificarVolumen, volumenSospechoso, escalarMetricas, ErrorMalla } from './index';
 import { leerStl, esStlBinario } from './stl';
 import { leer3mf, componer } from './tresmf';
 
@@ -219,5 +219,14 @@ describe('detección de formato y volumen de impresión', () => {
     const m = calcularMetricas(leerStl(stlAscii(plano)));
     expect(volumenSospechoso(m)).toBe(true);
     expect(volumenSospechoso(calcularMetricas(leerStl(stlBinario(cubo(10)))))).toBe(false);
+  });
+});
+
+describe('escala de unidades', () => {
+  it('convierte un cubo exportado en pulgadas a mm', () => {
+    const m = escalarMetricas(calcularMetricas(leerStl(stlBinario(cubo(1)))), 25.4);
+    expect(m.volumenMm3).toBeCloseTo(25.4 ** 3, 3);
+    expect(m.areaMm2).toBeCloseTo(6 * 25.4 ** 2, 3);
+    expect(m.caja.tamano[0]).toBeCloseTo(25.4, 5);
   });
 });

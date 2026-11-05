@@ -7,7 +7,14 @@ import { leer3mf } from './tresmf';
 import { ErrorMalla, type Malla } from './tipos';
 
 export * from './tipos';
-export { calcularMetricas, verificarVolumen, volumenSospechoso } from './metricas';
+export {
+  calcularMetricas,
+  verificarVolumen,
+  volumenSospechoso,
+  escalarMetricas,
+  UNIDADES_ARCHIVO,
+  type UnidadArchivo,
+} from './metricas';
 
 export const EXTENSIONES_MODELO = ['.stl', '.3mf'] as const;
 /** Tamaño máximo de archivo de modelo aceptado (bytes). */

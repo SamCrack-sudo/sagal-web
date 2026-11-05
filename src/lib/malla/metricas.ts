@@ -109,3 +109,23 @@ export function volumenSospechoso(m: MetricasMalla): boolean {
   const volCaja = x * y * z;
   return m.volumenMm3 <= 0 || (volCaja > 0 && m.volumenMm3 / volCaja < 0.002);
 }
+
+/** Unidades en que pudo exportarse un STL (que no declara unidades). */
+export const UNIDADES_ARCHIVO = {
+  mm: { nombre: 'Milímetros', factor: 1 },
+  cm: { nombre: 'Centímetros', factor: 10 },
+  in: { nombre: 'Pulgadas', factor: 25.4 },
+} as const;
+export type UnidadArchivo = keyof typeof UNIDADES_ARCHIVO;
+
+/** Escala las métricas cuando el archivo se exportó en otra unidad. */
+export function escalarMetricas(m: MetricasMalla, factor: number): MetricasMalla {
+  if (factor === 1) return m;
+  const e = (v: Vec3): Vec3 => [v[0] * factor, v[1] * factor, v[2] * factor];
+  return {
+    ...m,
+    volumenMm3: m.volumenMm3 * factor ** 3,
+    areaMm2: m.areaMm2 * factor ** 2,
+    caja: { min: e(m.caja.min), max: e(m.caja.max), tamano: e(m.caja.tamano) },
+  };
+}
