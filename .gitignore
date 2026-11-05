@@ -1,0 +1,22 @@
+# Dependencias y salidas de compilación
+node_modules/
+dist/
+.astro/
+.wrangler/
+
+# Variables de entorno: NUNCA subir claves. Solo .env.example va al repositorio.
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+
+# Sistema y editores
+.DS_Store
+*.log
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Capturas de verificación locales
+capturas/
