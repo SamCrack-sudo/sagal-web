@@ -4,6 +4,8 @@ Sitio comercial y herramienta de gestión de **SAGAL Robotics**, un taller de in
 
 El sitio no es solo una página de presentación: su objetivo es **convertir visitas en solicitudes y pedidos**. Su pieza central es un **cotizador instantáneo** que lee el archivo STL/3MF del cliente, lo muestra en 3D con sus medidas reales y calcula el precio en vivo.
 
+> **¿No eres programador?** Empieza por la [Guía del sitio para no programadores](GUIA.md): cómo funciona, qué hace cada archivo y cómo pedir cambios.
+
 > **Estado: Fase 1 (base y ventas) terminada.** La gestión (Supabase, panel `/admin`, seguimiento de pedidos) corresponde a la fase 2, y la tienda, la educación, los proyectos, las guías y las métricas a la fase 3. Ver [Hoja de ruta](#hoja-de-ruta).
 
 ---
