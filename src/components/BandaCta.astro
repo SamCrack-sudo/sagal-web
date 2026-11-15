@@ -1,0 +1,39 @@
+---
+/** Banda final de llamada a la acción, reutilizable en páginas interiores. */
+interface Props {
+  titulo: string;
+  texto?: string;
+  principal: { texto: string; href: string; evento?: string };
+  secundario?: { texto: string; href: string };
+  origen: string;
+}
+const { titulo, texto, principal, secundario, origen } = Astro.props;
+---
+
+<section class="seccion seccion--azul banda-cta">
+  <div class="contenedor banda-cta__rejilla">
+    <div>
+      <h2 class="titulo-2">{titulo}</h2>
+      {texto && <p class="entrada">{texto}</p>}
+    </div>
+    <div class="grupo-botones">
+      <a href={principal.href} class="boton boton--primario" data-evento={principal.evento} data-origen={origen}>{principal.texto}</a>
+      {secundario && <a href={secundario.href} class="boton boton--claro">{secundario.texto}</a>}
+    </div>
+  </div>
+</section>
+
+<style>
+  .banda-cta__rejilla {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px 64px;
+  }
+  .banda-cta__rejilla > div:first-child {
+    flex: 1 1 480px;
+    display: grid;
+    gap: 16px;
+  }
+</style>

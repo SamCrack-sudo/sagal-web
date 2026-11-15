@@ -1,0 +1,52 @@
+name: Solicitud de cambio
+description: Pide un cambio en el sitio (textos, precios, diseño, algo que no funciona o una idea nueva).
+title: "[Cambio] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe lo que quieres en lenguaje normal; no hace falta saber programar.
+        **No escribas claves, contraseñas ni datos personales de clientes en este formulario: el repositorio es público.**
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo de cambio
+      options:
+        - Texto o contenido
+        - Precio, material o color del cotizador
+        - Diseño o apariencia
+        - Algo no funciona
+        - Idea o función nueva
+    validations:
+      required: true
+  - type: input
+    id: pagina
+    attributes:
+      label: Página
+      description: La dirección o el nombre de la página (por ejemplo /empresas o "la portada").
+      placeholder: /cotizar
+  - type: textarea
+    id: ahora
+    attributes:
+      label: Qué ves hoy
+      description: Si algo no funciona, cuenta qué hiciste y qué pasó. Puedes arrastrar capturas de pantalla aquí.
+  - type: textarea
+    id: deseado
+    attributes:
+      label: Qué quieres
+      description: El resultado que esperas, con los textos o datos exactos si los tienes.
+    validations:
+      required: true
+  - type: textarea
+    id: motivo
+    attributes:
+      label: Por qué (opcional)
+      description: El motivo ayuda a elegir la mejor solución.
+  - type: dropdown
+    id: prioridad
+    attributes:
+      label: Prioridad
+      options:
+        - Cuando se pueda
+        - Pronto
+        - Urgente (afecta ventas o clientes)

@@ -1,0 +1,10 @@
+// Configuración de Cloudflare Workers. El adaptador de Astro completa `main`,
+// `assets` y los bindings al compilar (ver dist/server/wrangler.json).
+// Los secretos NO van aquí: se definen con `npx wrangler secret put NOMBRE`
+// o en el panel de Cloudflare (ver README).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sagal-web",
+  "compatibility_date": "2026-10-15",
+  "observability": { "enabled": true }
+}

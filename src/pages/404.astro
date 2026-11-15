@@ -1,0 +1,29 @@
+---
+import Base from '@/layouts/Base.astro';
+import CabeceraPagina from '@/components/CabeceraPagina.astro';
+import { servicios } from '@/config/navegacion';
+---
+
+<Base titulo="Página no encontrada" descripcion="La página que buscas no existe o cambió de dirección." noIndexar pagina="404">
+  <CabeceraPagina
+    slot="cabecera"
+    rotulo="Error 404"
+    titulo="Esta pieza no está en el plano"
+    entrada="La página que buscas no existe o cambió de dirección. Estos enlaces te pueden servir:"
+  >
+    <div class="grupo-botones">
+      <a href="/" class="boton boton--primario">Ir al inicio</a>
+      <a href="/cotizar" class="boton boton--claro">Cotizar impresión 3D</a>
+    </div>
+  </CabeceraPagina>
+
+  <section class="seccion">
+    <div class="contenedor">
+      <ul class="lista-marcas">
+        {servicios.map((s) => <li><a class="enlace" href={s.href}>{s.etiqueta}</a> — {s.descripcion}</li>)}
+        <li><a class="enlace" href="/empresas">Empresas</a> — repuestos, jigs, guardas y prototipos.</li>
+        <li><a class="enlace" href="/contacto">Contacto</a> — escríbenos.</li>
+      </ul>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,150 @@
+---
+import Base from '@/layouts/Base.astro';
+import CabeceraPagina from '@/components/CabeceraPagina.astro';
+import BandaCta from '@/components/BandaCta.astro';
+import Faq from '@/components/Faq.astro';
+import Icono from '@/components/Icono.astro';
+import { marca } from '@/config/marca';
+import { migas, paginaFaq, servicio, type PreguntaFrecuente } from '@/lib/seo';
+
+const preguntas: PreguntaFrecuente[] = [
+  {
+    pregunta: '¿Ayudan con proyectos de grado o de universidad?',
+    respuesta:
+      'Sí. Diseñamos e imprimimos la estructura, integramos la electrónica y te acompañamos para que entiendas cómo funciona lo que entregas.',
+  },
+  {
+    pregunta: '¿Hacen automatización para pequeñas empresas?',
+    respuesta:
+      'Hacemos automatización sencilla: sensores, contadores, actuadores y control para tareas repetitivas. Para sistemas industriales críticos te decimos con honestidad si el proyecto está a nuestro alcance.',
+  },
+  {
+    pregunta: '¿Entregan el código y los diagramas?',
+    respuesta: 'Sí, el proyecto se entrega documentado. [CONFIGURAR: qué documentación se incluye en cada caso]',
+  },
+];
+
+const jsonLd = [
+  servicio(
+    {
+      nombre: 'Robótica y electrónica a la medida',
+      descripcion: 'Mecanismos, prototipos robóticos e integración de sensores, motores y microcontroladores.',
+      ruta: '/servicios/robotica-y-electronica',
+      tipo: 'Robótica y electrónica',
+    },
+    Astro.site,
+  ),
+  paginaFaq(preguntas),
+  migas(
+    [
+      { nombre: 'Servicios', ruta: '/servicios/robotica-y-electronica' },
+      { nombre: 'Robótica y electrónica', ruta: '/servicios/robotica-y-electronica' },
+    ],
+    Astro.site,
+  ),
+];
+---
+
+<Base
+  titulo="Robótica, electrónica y prototipos a la medida"
+  descripcion={`Prototipos robóticos, mecanismos y electrónica en ${marca.ubicacion.ciudad}: sensores, motores y microcontroladores integrados y probados. Para proyectos académicos, emprendimientos y empresas.`}
+  mensajeWhatsApp={`Hola ${marca.nombre}, tengo un proyecto de robótica o electrónica.`}
+  pagina="servicio-robotica"
+  jsonLd={jsonLd}
+>
+  <CabeceraPagina
+    slot="cabecera"
+    rotulo="Servicio"
+    titulo="Robótica y electrónica que funciona a la primera entrega"
+    entrada="Diseñamos la estructura, integramos sensores, motores y microcontroladores, y probamos que todo funcione junto antes de entregarlo."
+    migas={[
+      { nombre: 'Servicios', ruta: '/servicios/robotica-y-electronica' },
+      { nombre: 'Robótica y electrónica', ruta: '/servicios/robotica-y-electronica' },
+    ]}
+  >
+    <div class="grupo-botones">
+      <a href="/contacto" class="boton boton--primario">Contarnos tu proyecto</a>
+    </div>
+  </CabeceraPagina>
+
+  <section class="seccion" aria-labelledby="que-titulo">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <p class="rotulo">Qué hacemos</p>
+        <h2 class="titulo-2" id="que-titulo">Mecánica, electrónica y control en un mismo taller</h2>
+      </div>
+      <div class="rejilla rejilla--2">
+        <div class="item-linea bloque-icono">
+          <span class="item-linea__icono"><Icono nombre="robotica" /></span>
+          <h3 class="titulo-3">Mecanismos y robots</h3>
+          <p class="secundario">Brazos, pinzas, plataformas móviles y mecanismos a la medida, desde la estructura hasta el movimiento.</p>
+        </div>
+        <div class="item-linea bloque-icono">
+          <span class="item-linea__icono"><Icono nombre="electronica" /></span>
+          <h3 class="titulo-3">Electrónica y control</h3>
+          <p class="secundario">Circuitos de control con microcontroladores, sensores y actuadores, montaje y pruebas.</p>
+        </div>
+        <div class="item-linea bloque-icono">
+          <span class="item-linea__icono"><Icono nombre="cad" /></span>
+          <h3 class="titulo-3">Prototipos de producto</h3>
+          <p class="secundario">Para emprendimientos: una primera versión que funcione para validar la idea con clientes o inversionistas.</p>
+        </div>
+        <div class="item-linea bloque-icono">
+          <span class="item-linea__icono"><Icono nombre="educacion" /></span>
+          <h3 class="titulo-3">Proyectos académicos</h3>
+          <p class="secundario">Acompañamiento en proyectos de colegio y universidad, con la explicación de cómo funciona cada parte.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion seccion--alterna" aria-labelledby="como-titulo">
+    <div class="contenedor dos-columnas">
+      <div class="dos-columnas__texto">
+        <p class="rotulo">Método</p>
+        <h2 class="titulo-2" id="como-titulo">Probado antes de entregar</h2>
+        <p class="entrada">
+          Un prototipo que funciona en el escritorio y falla en el uso real no sirve. Por eso definimos contigo cómo se va a probar antes de empezar.
+        </p>
+      </div>
+      <ul class="lista-marcas lista-grande">
+        <li>Requisitos claros: qué debe hacer, dónde y con qué alimentación.</li>
+        <li>Diseño mecánico e impresión de la estructura en el mismo taller.</li>
+        <li>Integración y pruebas de funcionamiento con criterios acordados.</li>
+        <li>Entrega con explicación de uso y documentación.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="faq-titulo">
+    <div class="contenedor contenedor--estrecho">
+      <div class="cabecera-seccion">
+        <h2 class="titulo-2" id="faq-titulo">Preguntas frecuentes</h2>
+      </div>
+      <Faq preguntas={preguntas} />
+    </div>
+  </section>
+
+  <BandaCta
+    titulo="¿Tienes un proyecto en mente?"
+    texto="Cuéntanos qué quieres que haga y te respondemos con una propuesta."
+    principal={{ texto: 'Escribirnos', href: '/contacto' }}
+    secundario={{ texto: 'Cotizar solo la impresión', href: '/cotizar' }}
+    origen="servicio-robotica"
+  />
+</Base>
+
+<style>
+  .bloque-icono {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+  .bloque-icono .item-linea__icono {
+    margin-bottom: 6px;
+  }
+  .lista-grande {
+    gap: 16px;
+    font-size: 1.0625rem;
+  }
+</style>

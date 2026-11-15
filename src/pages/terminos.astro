@@ -1,0 +1,115 @@
+---
+import Base from '@/layouts/Base.astro';
+import CabeceraPagina from '@/components/CabeceraPagina.astro';
+import { marca } from '@/config/marca';
+
+const l = marca.legal;
+---
+
+<Base
+  titulo="Términos y condiciones de venta"
+  descripcion={`Términos y condiciones de cotizaciones, pedidos, pagos, entregas, garantía y retracto de ${marca.nombre}.`}
+  pagina="terminos"
+>
+  <CabeceraPagina
+    slot="cabecera"
+    rotulo="Legal"
+    titulo="Términos y condiciones de venta"
+    entrada="Reglas claras para cotizaciones, pedidos, pagos, entregas y garantías."
+    migas={[{ nombre: 'Términos y condiciones', ruta: '/terminos' }]}
+  />
+
+  <section class="seccion">
+    <div class="contenedor">
+      <article class="prosa">
+        <p class="aviso aviso--alerta"><strong>BORRADOR – revisar con un abogado.</strong> Este texto es una base de trabajo y no constituye asesoría legal. Completa los marcadores y valídalo antes de publicar.</p>
+
+        <p>Última actualización: {l.fechaActualizacion}</p>
+
+        <h2>1. Quiénes somos</h2>
+        <p>
+          {marca.nombre} es el nombre comercial de {l.responsable}, identificado con {l.identificacion}, con domicilio en {marca.ubicacion.ciudad},
+          {marca.ubicacion.region}. Contacto: <a href={`mailto:${marca.contacto.correo}`}>{marca.contacto.correo}</a>.
+        </p>
+
+        <h2>2. Cotizaciones</h2>
+        <ul>
+          <li>
+            El precio que muestra el cotizador en línea es un <strong>estimado</strong> calculado a partir del archivo enviado. Lo confirmamos después de
+            revisar el archivo; el precio final es el de la cotización que aprobaste.
+          </li>
+          <li>Las cotizaciones tienen una vigencia de [CONFIGURAR] días calendario.</li>
+          <li>Los precios se expresan en pesos colombianos. [CONFIGURAR: indicar si incluyen IVA o si el vendedor no es responsable de IVA]</li>
+        </ul>
+
+        <h2>3. Pedido, aprobación y pago</h2>
+        <ul>
+          <li>Ningún trabajo se fabrica sin tu aprobación expresa de la cotización final.</li>
+          <li>
+            Tras la aprobación te enviamos un enlace de pago o los datos para transferencia. [CONFIGURAR: anticipo requerido, medios de pago y plazos]
+          </li>
+          <li>El plazo de entrega se cuenta en días hábiles desde la aprobación y el pago del anticipo, si aplica.</li>
+        </ul>
+
+        <h2>4. Productos hechos según tus especificaciones</h2>
+        <p>
+          La mayoría de nuestros trabajos se fabrican conforme a las especificaciones del cliente (su archivo, sus medidas o su diseño) o están
+          claramente personalizados. Por eso:
+        </p>
+        <ul>
+          <li>
+            <strong>Derecho de retracto:</strong> de acuerdo con el artículo 47 de la Ley 1480 de 2011, el derecho de retracto no aplica a bienes
+            confeccionados conforme a las especificaciones del consumidor o claramente personalizados. Para productos estándar del catálogo comprados a
+            distancia, el retracto puede ejercerse dentro de los cinco (5) días hábiles siguientes a la entrega, en las condiciones de la ley.
+          </li>
+          <li>
+            <strong>Responsabilidad del diseño del cliente:</strong> cuando fabricamos a partir de un archivo o diseño suministrado por el cliente,
+            respondemos por la calidad de la fabricación, no por errores, medidas o funcionamiento del diseño suministrado.
+          </li>
+          <li>
+            <strong>Tolerancias:</strong> la impresión 3D tiene tolerancias propias del proceso. [CONFIGURAR: tolerancia dimensional general, p. ej. ±
+            X mm]. Si una medida es crítica, indícalo al cotizar.
+          </li>
+        </ul>
+
+        <h2>5. Garantía</h2>
+        <p>
+          Respondemos por la garantía legal de calidad, idoneidad y seguridad prevista en la Ley 1480 de 2011, frente a defectos de fabricación. La
+          garantía no cubre daños por uso distinto al acordado, por condiciones (temperatura, carga, químicos) no informadas al cotizar, ni desgaste
+          normal. [CONFIGURAR: término de la garantía y procedimiento de reclamación]
+        </p>
+
+        <h2>6. Usos no aceptados</h2>
+        <p>
+          No fabricamos armas, piezas para armas ni objetos cuya fabricación o uso sea ilegal, ni copias que infrinjan derechos de propiedad
+          intelectual de terceros. Al enviar un archivo declaras tener los derechos para usarlo. Las piezas no están certificadas para aplicaciones
+          médicas, aeronáuticas, de seguridad de personas ni de contacto con alimentos, salvo acuerdo escrito.
+        </p>
+
+        <h2>7. Archivos y propiedad intelectual</h2>
+        <p>
+          Los archivos que nos envías siguen siendo tuyos y solo los usamos para cotizar y fabricar tu pedido. Los diseños que hacemos para ti se
+          entregan según el paquete contratado. [CONFIGURAR: titularidad de los diseños CAD elaborados por el taller]
+        </p>
+
+        <h2>8. Entregas</h2>
+        <p>[CONFIGURAR: recogida en el taller, domicilios en la Sabana Centro, envíos nacionales, costos y responsabilidad durante el transporte]</p>
+
+        <h2>9. Reversión del pago</h2>
+        <p>
+          En las ventas realizadas por medios electrónicos aplican las reglas de reversión del pago del artículo 51 de la Ley 1480 de 2011 y sus
+          normas reglamentarias.
+        </p>
+
+        <h2>10. Peticiones, quejas y reclamos</h2>
+        <p>
+          Puedes escribirnos a <a href={`mailto:${marca.contacto.correo}`}>{marca.contacto.correo}</a>. Si no quedas satisfecho con nuestra respuesta,
+          puedes acudir a la Superintendencia de Industria y Comercio.
+        </p>
+
+        <h2>11. Ley aplicable</h2>
+        <p>Estos términos se rigen por las leyes de la República de Colombia.</p>
+      </article>
+    </div>
+  </section>
+</Base>
