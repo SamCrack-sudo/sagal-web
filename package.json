@@ -15,13 +15,16 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "typecheck": "astro check",
-    "og": "node scripts/generar-og.mjs"
+    "og": "node scripts/generar-og.mjs",
+    "semilla": "node --experimental-strip-types --no-warnings scripts/generar-semilla.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.4",
     "@astrojs/react": "^7.1.2",
     "@astrojs/sitemap": "^3.7.4",
     "@fontsource-variable/archivo": "^5.3.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.0",
     "astro": "^7.4.5",
     "fflate": "^0.8.3",
     "react": "^19.3.1",
@@ -30,6 +33,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
+    "@electric-sql/pglite": "^0.5.16",
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
