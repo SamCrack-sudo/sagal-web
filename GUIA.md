@@ -392,7 +392,7 @@ Idea  →  rama aparte  →  pull request (revisión)  →  Merge a main  →  C
 - Un **pull request** es la propuesta de pasar una rama a `main`. Ahí se revisa y se comenta.
 - Cuando Cloudflare esté conectado (ver README), **cada vez que fusiones algo en `main`, el sitio se publica solo** en un par de minutos.
 
-Hoy todo el sitio está en el pull request #1, que aún no se ha fusionado. Cuando lo revises y pulses **Merge**, quedará en `main`.
+Hoy el sitio está en dos pull requests sin fusionar: el **#1** (fase 1: sitio y cotizador) y el **#2** (fase 2: base de datos, panel y seguimiento). Fusiona primero el #1 y después el #2; así todo queda en `main`.
 
 ---
 
