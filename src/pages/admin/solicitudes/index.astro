@@ -1,0 +1,134 @@
+---
+import Admin from '@/layouts/Admin.astro';
+import TarjetaSolicitud from '@/components/admin/TarjetaSolicitud.astro';
+import EtiquetaEstado from '@/components/admin/EtiquetaEstado.astro';
+import { ESTADOS, ETIQUETA_ESTADO, esEstado } from '@/lib/gestion/estados';
+import { TIPOS_SOLICITUD, type TipoSolicitud } from '@/lib/solicitudes/tipos';
+import { formatoFecha } from '@/lib/gestion/formato';
+import { formatoCOP } from '@/lib/precios/motor';
+
+export const prerender = false;
+
+const p = Astro.url.searchParams;
+const q = (p.get('q') ?? '').slice(0, 80);
+const tipoParam = p.get('tipo') ?? '';
+const tipo = tipoParam in TIPOS_SOLICITUD ? (tipoParam as TipoSolicitud) : undefined;
+const estadoParam = p.get('estado');
+const estado = esEstado(estadoParam) ? estadoParam : undefined;
+const vista = estado || p.get('vista') === 'lista' ? 'lista' : 'tablero';
+
+const solicitudes = await Astro.locals.repoAdmin!.listarSolicitudes({ q, tipo, estado, limite: 500 });
+const columnas = ESTADOS.map((e) => ({ estado: e, items: solicitudes.filter((s) => s.estado === e) }));
+
+const enlaceVista = (v: string) => {
+  const u = new URLSearchParams(p);
+  u.delete('estado');
+  u.set('vista', v);
+  return `?${u}`;
+};
+---
+
+<Admin titulo="Solicitudes" seccion="solicitudes">
+  <div class="admin-cabecera">
+    <div>
+      <h1>{estado ? `Solicitudes: ${ETIQUETA_ESTADO[estado]}` : 'Cotizaciones y pedidos'}</h1>
+      <p>{solicitudes.length} resultado{solicitudes.length === 1 ? '' : 's'}</p>
+    </div>
+    <div class="grupo-botones">
+      <a class="boton boton--chico" class:list={[vista === 'tablero' ? 'boton--azul' : 'boton--contorno']} href={enlaceVista('tablero')}
+        >Tablero</a
+      >
+      <a class="boton boton--chico" class:list={[vista === 'lista' ? 'boton--azul' : 'boton--contorno']} href={enlaceVista('lista')}>Lista</a>
+    </div>
+  </div>
+
+  <form class="filtros" method="get" role="search">
+    <div class="campo">
+      <label class="campo__etiqueta" for="q">Buscar</label>
+      <input id="q" name="q" class="control" value={q} placeholder="Código, cliente, correo o empresa" />
+    </div>
+    <div class="campo">
+      <label class="campo__etiqueta" for="tipo">Tipo</label>
+      <select id="tipo" name="tipo" class="control">
+        <option value="">Todos</option>
+        {
+          Object.entries(TIPOS_SOLICITUD).map(([k, v]) => (
+            <option value={k} selected={k === tipo}>
+              {v}
+            </option>
+          ))
+        }
+      </select>
+    </div>
+    {estado && <input type="hidden" name="estado" value={estado} />}
+    <input type="hidden" name="vista" value={vista} />
+    <button type="submit" class="boton boton--azul">Filtrar</button>
+    {(q || tipo || estado) && <a class="boton boton--texto" href="/admin/solicitudes">Limpiar</a>}
+  </form>
+
+  {
+    vista === 'tablero' ? (
+      <div class="tablero" aria-label="Tablero por estado">
+        {columnas.map((c) => (
+          <section class="tablero__columna" aria-labelledby={`col-${c.estado}`}>
+            <h2 id={`col-${c.estado}`}>
+              <span>{ETIQUETA_ESTADO[c.estado]}</span>
+              <a class="etiqueta etiqueta--neutra" href={`/admin/solicitudes?estado=${c.estado}`} aria-label={`Ver ${c.items.length} en lista`}>
+                {c.items.length}
+              </a>
+            </h2>
+            {c.items.slice(0, 30).map((s) => (
+              <TarjetaSolicitud s={s} />
+            ))}
+            {c.items.length > 30 && (
+              <a class="enlace" href={`/admin/solicitudes?estado=${c.estado}`}>
+                Ver las {c.items.length}
+              </a>
+            )}
+          </section>
+        ))}
+      </div>
+    ) : solicitudes.length === 0 ? (
+      <p class="aviso">No hay solicitudes con esos filtros.</p>
+    ) : (
+      <div class="tabla-envoltura">
+        <table class="tabla tabla--tarjetas">
+          <caption class="sr-only">Solicitudes</caption>
+          <thead>
+            <tr>
+              <th scope="col">Código</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Cliente</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="num">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {solicitudes.map((s) => {
+              const precio = s.precioFinal ?? s.precioEstimado;
+              return (
+                <tr>
+                  <td>
+                    <a class="enlace" href={`/admin/solicitudes/${s.id}`}>
+                      {s.codigo}
+                    </a>
+                  </td>
+                  <td data-titulo="Fecha">{formatoFecha(s.creadoEn)}</td>
+                  <td data-titulo="Cliente">{s.cliente.empresa ? `${s.cliente.empresa} · ${s.cliente.nombre}` : s.cliente.nombre}</td>
+                  <td data-titulo="Tipo">{TIPOS_SOLICITUD[s.tipo]}</td>
+                  <td>
+                    <EtiquetaEstado estado={s.estado} />
+                  </td>
+                  <td class="num" data-titulo="Valor">
+                    {precio === null ? '—' : `${formatoCOP(precio)}${s.precioFinal === null ? ' est.' : ''}`}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+</Admin>

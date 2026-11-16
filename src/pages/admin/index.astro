@@ -1,0 +1,127 @@
+---
+import Admin from '@/layouts/Admin.astro';
+import TarjetaSolicitud from '@/components/admin/TarjetaSolicitud.astro';
+import { calcularResumen } from '@/lib/gestion/metricas';
+import { ESTADOS, ETIQUETA_ESTADO } from '@/lib/gestion/estados';
+import { formatoCOP, formatoNumero } from '@/lib/precios/motor';
+import { formatoFecha } from '@/lib/gestion/formato';
+
+export const prerender = false;
+
+const repo = Astro.locals.repoAdmin!;
+const ahora = new Date();
+const [filas, nuevas, cotizadas] = await Promise.all([
+  repo.filasMetricas(new Date(ahora.getTime() - 365 * 86_400_000)),
+  repo.listarSolicitudes({ estado: 'nuevo', limite: 8 }),
+  repo.listarSolicitudes({ estado: 'cotizado', limite: 8 }),
+]);
+const r = calcularResumen(filas, ahora);
+const maxOrigen = Math.max(1, ...r.origenes.map((o) => o.cantidad));
+const maxEstado = Math.max(1, ...ESTADOS.map((e) => r.porEstado[e]));
+const variacion = r.cotizaciones7d - r.cotizaciones7dAnterior;
+---
+
+<Admin titulo="Resumen" seccion="resumen">
+  <div class="admin-cabecera">
+    <h1>Resumen</h1>
+    <p>{formatoFecha(ahora.toISOString(), true)}</p>
+  </div>
+
+  <dl class="indicadores">
+    <div class="indicador">
+      <dt>Cotizaciones · 7 días</dt>
+      <dd>
+        {r.cotizaciones7d}
+        <small>{variacion === 0 ? 'Igual que' : variacion > 0 ? `${variacion} más que` : `${-variacion} menos que`} los 7 días anteriores</small>
+      </dd>
+    </div>
+    <div class="indicador">
+      <dt>Conversión · 30 días</dt>
+      <dd>
+        {r.conversion.tasa === null ? '—' : `${formatoNumero(r.conversion.tasa * 100)} %`}
+        <small>{r.conversion.aprobadas} de {r.conversion.cotizaciones} cotizaciones aprobadas</small>
+      </dd>
+    </div>
+    <div class="indicador">
+      <dt>Ingresos del mes</dt>
+      <dd>
+        {formatoCOP(r.ingresosMes)}
+        <small>{r.pagadosMes} pedido{r.pagadosMes === 1 ? '' : 's'} pagado{r.pagadosMes === 1 ? '' : 's'}</small>
+      </dd>
+    </div>
+    <div class="indicador">
+      <dt>Ticket promedio</dt>
+      <dd>
+        {r.ticketPromedio === null ? '—' : formatoCOP(r.ticketPromedio)}
+        <small>Pedidos pagados este mes</small>
+      </dd>
+    </div>
+    <div class="indicador">
+      <dt>En producción</dt>
+      <dd>
+        {r.enProduccion}
+        <small>{r.porEstado.aprobado} aprobado{r.porEstado.aprobado === 1 ? '' : 's'} en espera</small>
+      </dd>
+    </div>
+  </dl>
+
+  <div class="detalle">
+    <div class="detalle__columna">
+      <section class="panel" aria-labelledby="nuevas-titulo">
+        <h2 id="nuevas-titulo">Por atender ({r.porEstado.nuevo})</h2>
+        {nuevas.length === 0 ? <p class="secundario">No hay solicitudes nuevas.</p> : nuevas.map((s) => <TarjetaSolicitud s={s} />)}
+        {r.porEstado.nuevo > nuevas.length && (
+          <a class="enlace" href="/admin/solicitudes?estado=nuevo">
+            Ver todas
+          </a>
+        )}
+      </section>
+      <section class="panel" aria-labelledby="cotizadas-titulo">
+        <h2 id="cotizadas-titulo">Esperando aprobación del cliente ({r.porEstado.cotizado})</h2>
+        {cotizadas.length === 0 ? <p class="secundario">Ninguna cotización pendiente.</p> : cotizadas.map((s) => <TarjetaSolicitud s={s} />)}
+      </section>
+    </div>
+
+    <div class="detalle__columna">
+      <section class="panel" aria-labelledby="origen-titulo">
+        <h2 id="origen-titulo">Origen de los clientes · 90 días</h2>
+        {
+          r.origenes.length === 0 ? (
+            <p class="secundario">Aún no hay datos.</p>
+          ) : (
+            <ul class="barras">
+              {r.origenes.map((o) => (
+                <li>
+                  <span>{o.canal}</span>
+                  <span class="barras__pista" aria-hidden="true">
+                    <span class="barras__valor" style={`width:${(o.cantidad / maxOrigen) * 100}%`} />
+                  </span>
+                  <span class="barras__cifra">{o.cantidad}</span>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+        <p class="secundario">Según los UTM y el sitio de procedencia con que llegó cada solicitud.</p>
+      </section>
+      <section class="panel" aria-labelledby="estados-titulo">
+        <h2 id="estados-titulo">Solicitudes por estado</h2>
+        <ul class="barras">
+          {
+            ESTADOS.map((e) => (
+              <li>
+                <a class="enlace" href={`/admin/solicitudes?estado=${e}`}>
+                  {ETIQUETA_ESTADO[e]}
+                </a>
+                <span class="barras__pista" aria-hidden="true">
+                  <span class="barras__valor" style={`width:${(r.porEstado[e] / maxEstado) * 100}%`} />
+                </span>
+                <span class="barras__cifra">{r.porEstado[e]}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    </div>
+  </div>
+</Admin>

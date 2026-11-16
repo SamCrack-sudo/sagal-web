@@ -1,0 +1,95 @@
+---
+/**
+ * Inicio de sesión con enlace mágico. Solo se envía el enlace a los correos de
+ * ADMIN_EMAILS; a cualquier otro se le muestra el mismo mensaje, sin revelar
+ * quién tiene acceso.
+ */
+import Admin from '@/layouts/Admin.astro';
+import { entorno } from '@/lib/servidor/entorno';
+
+export const prerender = false;
+
+const env = entorno();
+if (!env.supabase || Astro.locals.admin) return Astro.redirect('/admin');
+
+const ERRORES: Record<string, string> = {
+  enlace: 'El enlace venció o ya se usó. Pide uno nuevo.',
+  'no-autorizado': 'Ese correo no tiene acceso al panel.',
+};
+
+let enviado = false;
+let error = ERRORES[Astro.url.searchParams.get('error') ?? ''] ?? '';
+let correo = '';
+
+if (Astro.request.method === 'POST') {
+  const datos = await Astro.request.formData();
+  correo = String(datos.get('correo') ?? '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+    error = 'Escribe un correo válido.';
+  } else {
+    if (env.adminCorreos.includes(correo) && Astro.locals.supabase) {
+      const r = await Astro.locals.supabase.auth.signInWithOtp({
+        email: correo,
+        options: { emailRedirectTo: `${Astro.url.origin}/admin/auth/confirmar`, shouldCreateUser: true },
+      });
+      if (r.error) {
+        console.error('[ingreso]', r.error.message);
+        error = /rate|seconds|limit/i.test(r.error.message)
+          ? 'Ya pediste un enlace hace poco. Espera un minuto y vuelve a intentarlo.'
+          : 'No pudimos enviar el enlace. Revisa la configuración de Supabase (ver README).';
+      } else enviado = true;
+    } else enviado = true; // Mismo mensaje para no revelar quién tiene acceso.
+  }
+}
+---
+
+<Admin titulo="Ingresar">
+  <div class="ingreso">
+    <div class="admin-cabecera">
+      <h1>Panel de administración</h1>
+    </div>
+    {
+      env.adminCorreos.length === 0 && (
+        <p class="aviso aviso--alerta">
+          <strong>Falta ADMIN_EMAILS.</strong> Define en Cloudflare los correos con acceso al panel (ver README).
+        </p>
+      )
+    }
+    {
+      enviado ? (
+        <div class="aviso aviso--ok" role="status">
+          <strong>Revisa tu correo.</strong>
+          <span>Si {correo} tiene acceso, te llegó un enlace para entrar. Ábrelo en este mismo dispositivo. Vence en una hora.</span>
+        </div>
+      ) : (
+        <form method="post" class="panel">
+          <p>Te enviamos un enlace de acceso a tu correo. No necesitas contraseña.</p>
+          <div class="campo">
+            <label class="campo__etiqueta" for="correo">
+              Correo
+            </label>
+            <input
+              id="correo"
+              name="correo"
+              type="email"
+              class="control"
+              autocomplete="email"
+              required
+              value={correo}
+              aria-invalid={error ? 'true' : undefined}
+              aria-describedby={error ? 'correo-error' : undefined}
+            />
+            {error && (
+              <span class="campo__error" id="correo-error" role="alert">
+                {error}
+              </span>
+            )}
+          </div>
+          <button type="submit" class="boton boton--primario">
+            Enviarme el enlace
+          </button>
+        </form>
+      )
+    }
+  </div>
+</Admin>

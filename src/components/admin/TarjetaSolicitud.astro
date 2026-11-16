@@ -1,0 +1,27 @@
+---
+import EtiquetaEstado from './EtiquetaEstado.astro';
+import { TIPOS_SOLICITUD } from '@/lib/solicitudes/tipos';
+import { hace } from '@/lib/gestion/formato';
+import { formatoCOP } from '@/lib/precios/motor';
+import type { SolicitudConCliente } from '@/lib/datos/tipos';
+
+interface Props {
+  s: SolicitudConCliente;
+  mostrarEstado?: boolean;
+}
+const { s, mostrarEstado = false } = Astro.props;
+const precio = s.precioFinal ?? s.precioEstimado;
+---
+
+<a class="tarjeta-solicitud" href={`/admin/solicitudes/${s.id}`}>
+  <span class="tarjeta-solicitud__meta">
+    <span class="tarjeta-solicitud__codigo">{s.codigo}</span>
+    <span>{hace(s.creadoEn)}</span>
+  </span>
+  <strong>{s.cliente.empresa ? `${s.cliente.empresa} · ${s.cliente.nombre}` : s.cliente.nombre}</strong>
+  <span class="tarjeta-solicitud__meta">
+    <span>{TIPOS_SOLICITUD[s.tipo]}</span>
+    {precio !== null && <span class="cifra">{formatoCOP(precio)}{s.precioFinal === null ? ' est.' : ''}</span>}
+  </span>
+  {mostrarEstado && <span><EtiquetaEstado estado={s.estado} /></span>}
+</a>
