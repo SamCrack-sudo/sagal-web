@@ -6,7 +6,7 @@ El sitio no es solo una página de presentación: su objetivo es **convertir vis
 
 > **¿No eres programador?** Empieza por la [Guía del sitio para no programadores](GUIA.md): cómo funciona, qué hace cada archivo y cómo pedir cambios.
 
-> **Estado: Fase 1 (base y ventas) terminada.** La gestión (Supabase, panel `/admin`, seguimiento de pedidos) corresponde a la fase 2, y la tienda, la educación, los proyectos, las guías y las métricas a la fase 3. Ver [Hoja de ruta](#hoja-de-ruta).
+> **Estado: Fase 2 (gestión) terminada.** Base de datos Supabase con seguridad por filas, panel `/admin`, seguimiento público `/pedido/[codigo]` y correos de avance. La fase 3 (tienda, educación, proyectos, guías y métricas avanzadas) está pendiente. Ver [Hoja de ruta](#hoja-de-ruta).
 
 ---
 
@@ -36,8 +36,8 @@ El sitio no es solo una página de presentación: su objetivo es **convertir vis
 | Servidor | Cloudflare Workers con `@astrojs/cloudflare` | Salida híbrida: páginas prerenderizadas + rutas de API en el Worker. |
 | Correo | [Resend](https://resend.com) (API HTTP, sin SDK) | Acuse al cliente y aviso al dueño con el archivo adjunto. |
 | Antispam | Cloudflare Turnstile + campo trampa | Sin captchas molestos. |
-| Datos (fase 2) | Supabase: Postgres, Auth, Storage, RLS | Panel, historial, seguimiento. |
-| Pruebas | Vitest | Motor de precios, lectores de mallas, validación, correos. |
+| Datos | Supabase: Postgres, Auth (enlace mágico), Storage, RLS | Solicitudes, clientes, archivos, historial y precios editables. Sin Supabase, almacén de demostración en memoria. |
+| Pruebas | Vitest + PGlite | Motor de precios, lectores de mallas, validación, correos, métricas y la migración SQL con sus políticas RLS ejecutada en un Postgres real. |
 | Calidad | ESLint (TS + Astro), `astro check` | Se ejecutan en `npm run build` y `npm run lint`. |
 
 ### Estructura de carpetas
@@ -50,7 +50,7 @@ src/
     precios.ts                Configuración del cotizador (valores DEMO)
     servicios.ts              Paquetes de diseño CAD
     navegacion.ts             Menús
-    funciones.ts              Banderas (seguimiento, pagos, tienda…) apagadas
+    funciones.ts              Banderas (seguimiento activo; pagos y tienda apagados)
   styles/
     tokens.css                Tokens del sistema de diseño
     componentes.css           Botones, campos, tablas, etiquetas de estado, avisos…
@@ -58,21 +58,33 @@ src/
     malla/                    Lectores STL y 3MF + volumen, área, encaje (puro, con pruebas)
     precios/motor.ts          Motor de precios (puro, con pruebas)
     solicitudes/              Validación compartida cliente/servidor y códigos de seguimiento
-    servidor/                 Entorno, Turnstile, Resend, plantillas de correo
+    servidor/                 Entorno, Turnstile, Resend, plantillas de correo y avisos
+    datos/                    Repositorio: Supabase (real) y demo (memoria), sesión del panel
+    gestion/                  Estados, métricas del resumen, CSV y formatos (puro, con pruebas)
     cliente/                  Analítica (adaptador) y captura de UTM
     seo.ts                    schema.org: LocalBusiness, Service, FAQPage, migas
   components/
     islas/cotizador/          Cotizador, visor 3D, parámetros, panel de precio
     islas/formularios/        Campos, consentimiento, Turnstile, envío
     islas/portada/            Escena 3D del héroe (reductor que se despieza)
+    islas/admin/              Editor de precios y materiales del panel
   layouts/Base.astro          Metadatos, Open Graph, encabezado, pie, WhatsApp
-  pages/                      Rutas del sitio y API (/api/cotizacion, /api/contacto)
+  layouts/Admin.astro         Layout del panel
+  middleware.ts               Protege /admin y /api/admin (solo ADMIN_EMAILS)
+  pages/                      Rutas del sitio, del panel (admin/) y API
+supabase/
+  migrations/                 Esquema SQL con RLS, bucket de archivos y disparadores
+  seed.sql                    Configuración de precios inicial (npm run semilla)
+  esquema.test.ts             Prueba la migración y las políticas en PGlite
 scripts/generar-og.mjs        Genera la imagen Open Graph desde la marca
+scripts/generar-semilla.mjs   Genera supabase/seed.sql desde src/config/precios.ts
 ```
 
-### Mapa del sitio (fase 1)
+### Mapa del sitio
 
-`/` · `/cotizar` · `/servicios/impresion-3d` · `/servicios/diseno-cad` · `/servicios/robotica-y-electronica` · `/empresas` · `/contacto` · `/nosotros` · `/politica-de-datos` · `/terminos` · 404 · `/robots.txt` · `/sitemap-index.xml`
+Público: `/` · `/cotizar` · `/servicios/impresion-3d` · `/servicios/diseno-cad` · `/servicios/robotica-y-electronica` · `/empresas` · `/contacto` · `/nosotros` · `/pedido/[codigo]` · `/politica-de-datos` · `/terminos` · 404 · 500 · `/robots.txt` · `/sitemap-index.xml`
+
+Panel: `/admin` (resumen) · `/admin/solicitudes` · `/admin/solicitudes/[id]` · `/admin/clientes` · `/admin/clientes/[id]` · `/admin/precios` · `/admin/exportar` · `/admin/ingresar`
 
 ---
 
@@ -99,6 +111,7 @@ Otros comandos:
 | `npm test` | Pruebas unitarias (Vitest). |
 | `npm run lint` | ESLint. |
 | `npm run og` | Regenera `public/og/sagal-og.png` (requiere Playwright). |
+| `npm run semilla` | Regenera `supabase/seed.sql` a partir de `src/config/precios.ts`. |
 
 ---
 
@@ -107,11 +120,12 @@ Otros comandos:
 Si faltan variables de entorno, **el sitio compila y funciona igual**:
 
 - El cotizador calcula precios con los **valores de demostración** de `src/config/precios.ts` y lo dice en pantalla («Precios de demostración [CONFIGURAR]»).
-- Los formularios validan todo (también en el servidor, incluido releer el archivo 3D), pero **no envían correos ni guardan nada**: responden con un código de ejemplo y un aviso «Modo demostración».
+- **Sin Supabase**, las solicitudes se guardan en un **almacén de demostración en memoria** (con datos de ejemplo marcados «(demo)»), que se borra al reiniciar. El panel `/admin` abre sin iniciar sesión, con una franja «Modo demo», y el seguimiento `/pedido/[codigo]` funciona con esos datos.
+- **Sin Resend**, no se envían correos; los formularios lo avisan.
 - Sin `PUBLIC_TURNSTILE_SITE_KEY` no aparece el widget antispam, y sin `TURNSTILE_SECRET_KEY` el servidor omite esa verificación.
 - La analítica queda apagada.
 
-El modo demo se desactiva al configurar `RESEND_API_KEY`. Los precios dejan de mostrarse como demo cuando pones `esDemo: false` en `src/config/precios.ts`.
+Son dos interruptores independientes: los datos reales se activan con las variables de Supabase y los correos con `RESEND_API_KEY`. Los precios dejan de mostrarse como demo cuando desmarcas «Precios de demostración» en `/admin/precios`.
 
 ---
 
@@ -187,15 +201,51 @@ Eventos de conversión que ya se registran: `clic_cta_cotizar`, `clic_whatsapp`,
 
 Si activas GA4 o Plausible, revisa la sección de encargados en la política de datos.
 
-### 5. Supabase (fase 2)
+### 5. Supabase (base de datos, archivos y acceso al panel)
 
-Todavía no se usa. En la fase 2 se agregarán las migraciones SQL, las políticas RLS, los datos semilla y los pasos para:
+**1. Crea el proyecto**
 
-1. Crear el proyecto en <https://supabase.com>.
-2. Ejecutar las migraciones.
-3. Configurar el inicio de sesión con enlace mágico, limitado a los correos de `ADMIN_EMAILS`.
-4. Crear el bucket de Storage para STL/3MF.
-5. Definir `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY`.
+1. Entra a <https://supabase.com>, crea una cuenta y luego **New project**.
+2. Región: la más cercana a Colombia (por ejemplo *South America (São Paulo)*).
+3. Guarda la contraseña de la base de datos en un lugar seguro.
+
+**2. Crea las tablas** (una sola vez)
+
+1. En el panel de Supabase abre **SQL Editor → New query**.
+2. Copia todo el contenido de [`supabase/migrations/20261116000000_esquema_inicial.sql`](supabase/migrations/20261116000000_esquema_inicial.sql), pégalo y pulsa **Run**.
+3. Abre otra consulta, pega [`supabase/seed.sql`](supabase/seed.sql) (los precios iniciales de demostración) y pulsa **Run**.
+4. Comprueba en **Table Editor** que aparecen `solicitudes`, `clientes`, `archivos`, `eventos`, `configuracion` y `administradores`, todas con RLS activado, y en **Storage** el bucket privado `archivos`.
+
+Si prefieres la terminal, con la CLI de Supabase: `npx supabase link --project-ref TU_PROYECTO` y luego `npx supabase db push`.
+
+**3. Configura el inicio de sesión del panel**
+
+1. **Authentication → URL Configuration**:
+   - *Site URL*: tu dominio, por ejemplo `https://www.tu-dominio.co`.
+   - *Redirect URLs*: agrega `https://www.tu-dominio.co/admin/auth/confirmar` y, para probar en tu computador, `http://localhost:4321/admin/auth/confirmar`.
+2. **Authentication → Emails → Magic Link** (plantilla del correo): reemplaza el enlace por
+   `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`.
+   Así el enlace funciona aunque lo abras en otro navegador o en el celular. Sin este cambio también funciona, pero solo en el mismo navegador donde lo pediste.
+3. **Correo de los enlaces (muy recomendado):** el servicio de correo incluido en Supabase solo envía unos pocos correos por hora. En **Authentication → Emails → SMTP Settings** activa un SMTP propio con Resend:
+   - Host `smtp.resend.com`, puerto `465`, usuario `resend`.
+   - Contraseña: tu clave de API de Resend.
+   - Remitente: una dirección de tu dominio verificado.
+4. *(Opcional, más seguro)* En **Authentication → Sign In / Providers** desactiva *Allow new users to sign up* y crea cada administrador en **Authentication → Users → Add user**. Aunque no lo hagas, alguien que se registre por su cuenta no ve ningún dato: las políticas RLS solo dejan pasar a los correos de `ADMIN_EMAILS`.
+
+**4. Copia las claves al sitio**
+
+En **Project Settings → API Keys** (o **API**) copia estos tres valores y ponlos en Cloudflare (y en tu `.env` para probar en tu computador):
+
+| Variable | Valor |
+| --- | --- |
+| `SUPABASE_URL` | La *Project URL* (`https://xxxx.supabase.co`). |
+| `SUPABASE_ANON_KEY` | La clave pública: *anon* o *publishable*. |
+| `SUPABASE_SERVICE_ROLE_KEY` | La clave **secreta**: *service_role* o *secret*. Márcala como *Secret* en Cloudflare. **Nunca** la pegues en el código ni en una variable `PUBLIC_`. |
+| `ADMIN_EMAILS` | Los correos con acceso al panel, separados por coma. |
+
+Después entra a `/admin/ingresar`, escribe tu correo y abre el enlace que te llega. Cada vez que un administrador inicia sesión, la tabla `administradores` (que usan las políticas RLS) queda igual a `ADMIN_EMAILS`.
+
+**Para probar las políticas sin una cuenta:** `npm test` ejecuta la migración en un Postgres local (PGlite) y verifica que un visitante y un usuario sin permiso no ven datos, y que un administrador sí.
 
 ---
 
@@ -221,7 +271,7 @@ El botón flotante de WhatsApp aparece solo cuando `contacto.whatsapp` tiene un 
 
 ## Cómo cambiar precios y materiales
 
-En la fase 1 se editan en [`src/config/precios.ts`](src/config/precios.ts). **Todos los valores actuales son de demostración** y están marcados `[CONFIGURAR]`; no son precios reales.
+Se editan en **`/admin/precios`**, sin tocar código: el editor valida cada valor, muestra una cotización de prueba mientras escribes y aplica los cambios al cotizador en cuanto guardas. Los valores iniciales salen de [`src/config/precios.ts`](src/config/precios.ts) (también se usan como respaldo si la base de datos no responde). **Todos son de demostración** y están marcados `[CONFIGURAR]`; no son precios reales.
 
 | Parámetro | Qué controla |
 | --- | --- |
@@ -232,9 +282,9 @@ En la fase 1 se editan en [`src/config/precios.ts`](src/config/precios.ts). **To
 | `tarifaMaquinaHora`, `preparacionPorPedido`, `recargoCambioColor` | Costos fijos y variables. |
 | `margen`, `pedidoMinimo`, `descuentosCantidad`, `iva`, `redondeo` | Precio final. |
 | `entrega` | Horas de máquina por día y días de preparación, para el plazo. |
-| `esDemo` | Ponlo en `false` cuando los precios sean reales. |
+| `esDemo` | Desmárcalo («Precios de demostración») cuando los precios sean reales. |
 
-Los paquetes de diseño CAD están en `src/config/servicios.ts`. En la fase 2 todo esto se editará desde `/admin` sin tocar código.
+Los paquetes de diseño CAD siguen en `src/config/servicios.ts`.
 
 **Para calibrar el tiempo**: lamina 3 o 4 piezas reales en Bambu Studio, anota las horas y ajusta `factorCalibracion` hasta que el cotizador dé tiempos parecidos.
 
@@ -264,9 +314,26 @@ total   = precio + IVA (si se cobra)
 
 ## Panel de administración
 
-Llega en la **fase 2**. Incluirá: resumen (cotizaciones de la semana, conversión, ingresos, ticket promedio, pedidos en producción, origen de clientes), tablero por estados (nuevo → cotizado → aprobado → en producción → listo → entregado → pagado), clientes, catálogo, precios y materiales, y exportación a CSV, con acceso por enlace mágico solo para `ADMIN_EMAILS`.
+Entra a **`/admin`** (desde el celular también funciona). Con Supabase configurado, pide el enlace mágico en `/admin/ingresar`; sin Supabase, el panel abre en modo demo con datos de ejemplo.
 
-Mientras tanto, **cada solicitud te llega por correo** con todos los datos y el archivo adjunto, y ese correo es el registro de la solicitud. Las etiquetas de estado del sistema de diseño ya existen (`.estado--nuevo`, `.estado--en_produccion`, etc.).
+| Sección | Para qué |
+| --- | --- |
+| **Resumen** | Cotizaciones de los últimos 7 días, conversión cotización → pedido (30 días), ingresos y ticket promedio del mes, pedidos en producción, solicitudes por atender, cotizaciones esperando aprobación, origen de los clientes (UTM o sitio de procedencia) y solicitudes por estado. |
+| **Solicitudes** | Tablero por estados (nuevo → cotizado → aprobado → en producción → listo → entregado → pagado, y cancelado), con búsqueda y vista de lista. |
+| **Ficha de una solicitud** | Datos, opciones del cotizador, archivos para descargar, desglose de costos, historial y acciones. |
+| **Clientes** | Personas, empresas y colegios con su historial, total pagado, origen y notas. |
+| **Precios** | Todo el cotizador: materiales, colores, calidades, rellenos, acabados, urgencias, descuentos, margen, mínimo, IVA y calibración. |
+| **Exportar** | CSV de solicitudes y de clientes para Excel. |
+
+### El recorrido de una cotización
+
+1. Llega una solicitud. Te avisa un correo con un botón **Abrir en el panel**, y la solicitud aparece en **Por atender**.
+2. Revisa el archivo, la orientación y los soportes. En **Cotización final** escribe el precio, el plazo, el enlace de pago (opcional) y un mensaje, deja marcado «Pasar a Cotizado» y «Avisar al cliente», y guarda.
+3. El cliente recibe un correo y, en su página `/pedido/[codigo]`, ve el precio y el botón **Aprobar la cotización**. Cuando aprueba, te llega un correo y el pedido pasa a **Aprobado**.
+4. Avanza el pedido con **Cambiar estado**: En producción → Listo → Entregado → Pagado. Si quieres, agrega un mensaje y avísale por correo en cada paso.
+5. Usa **Nota** para apuntes internos (el cliente no los ve) o, marcando la casilla, para dejarle un mensaje en su página de seguimiento.
+
+Si el pedido no tiene enlace de pago, la página del cliente muestra las instrucciones de transferencia de `marca.pagos.instruccionesTransferencia`.
 
 ---
 
@@ -287,10 +354,11 @@ grep -rnE "\[(CONFIGURAR|CONFIRMAR|MARCADOR|MI |FOTO|NOMBRE|DIRECCIÓN|HORARIO|N
 - [ ] `legal.responsable`, `legal.identificacion` (NIT o cédula), `legal.fechaActualizacion`.
 - [ ] `fundacion`: año.
 - [ ] **CONFIRMAR** el volumen de impresión de 256 × 256 × 256 mm.
+- [ ] `pagos.instruccionesTransferencia`: banco, cuenta, titular y a dónde enviar el comprobante (se muestra en `/pedido/[codigo]`).
 
 ### Precios y operación
 
-- [ ] Todos los `[CONFIGURAR]` de `src/config/precios.ts`: precio por kg, tarifa de máquina, preparación, recargo de color AMS, margen, pedido mínimo, descuentos, urgencias, posprocesados, IVA, calibración y entregas. Luego `esDemo: false`.
+- [ ] Todos los precios de demostración, desde `/admin/precios`: precio por kg, tarifa de máquina, preparación, recargo de color AMS, margen, pedido mínimo, descuentos, urgencias, posprocesados, IVA, calibración y entregas. Luego desmarca «Precios de demostración».
 - [ ] Catálogo real de **materiales y colores** (los actuales son de ejemplo).
 - [ ] **CONFIRMAR** el máximo de colores por pieza del AMS 2 Pro (`maxColores`).
 - [ ] Paquetes CAD (`src/config/servicios.ts`): precio, plazo, revisiones y condiciones del abono al pedido.
@@ -311,6 +379,7 @@ grep -rnE "\[(CONFIGURAR|CONFIRMAR|MARCADOR|MI |FOTO|NOMBRE|DIRECCIÓN|HORARIO|N
 
 - [ ] Dominio y `PUBLIC_SITE_URL`.
 - [ ] Resend (con dominio verificado), Turnstile y Cloudflare Workers.
+- [ ] Supabase: proyecto, migración, semilla, URLs de redirección, plantilla del enlace mágico, SMTP con Resend y las variables `SUPABASE_*` y `ADMIN_EMAILS`.
 - [ ] Analítica (opcional).
 
 ---
@@ -318,7 +387,14 @@ grep -rnE "\[(CONFIGURAR|CONFIRMAR|MARCADOR|MI |FOTO|NOMBRE|DIRECCIÓN|HORARIO|N
 ## Decisiones tomadas
 
 - **Astro 7 + Cloudflare**, como pedía el documento. Salida *estática con rutas de servidor* (lo que antes se llamaba «híbrida»): todo se prerenderiza salvo `/api/*`.
-- **Sin base de datos en la fase 1**: el correo al dueño hace de registro (con el archivo adjunto). La página de seguimiento `/pedido/[codigo]` está detrás de la bandera `seguimientoPedidos` y llega con Supabase. Los códigos ya son no adivinables (≈ 8 × 10¹⁴ combinaciones).
+- **Una cotización y su pedido son la misma fila** (`solicitudes`), que avanza por los estados; el historial vive en `eventos`, con marca de visible para el cliente o interno.
+- **Seguridad**: RLS en todas las tablas. El público no tiene permisos sobre los datos: las solicitudes entran por `/api/*`, que usa la clave de servicio solo en el servidor. El panel usa la sesión del administrador, así que RLS también protege lo que el panel puede leer. `ADMIN_EMAILS` es la única lista de administradores; se copia a la tabla `administradores` en cada inicio de sesión.
+- **Si Supabase falla**, la solicitud no se pierde: el correo al dueño la registra con una advertencia. El cotizador usa los precios de respaldo si la base de datos tarda más de 4 s.
+- **Los precios se guardan como un JSON validado** en `configuracion`, con la misma forma que `src/config/precios.ts`. Su lectura es pública porque el cotizador los necesita en el navegador para calcular en vivo; eso implica que el margen se puede deducir viendo el código de la página.
+- **El cliente aprueba su cotización** desde `/pedido/[codigo]` (el código no adivinable es la llave, ≈ 8 × 10¹⁴ combinaciones). Esa página no muestra datos de contacto y no se indexa.
+- **Pagos**: por ahora, un enlace de pago por pedido o instrucciones de transferencia. La pasarela (Wompi o Mercado Pago) sigue detrás de la bandera `pagosEnLinea`, apagada.
+- **Catálogo, proyectos y talleres** se editarán en el panel cuando existan sus páginas públicas (fase 3).
+- **Probado sin una cuenta real de Supabase**: este entorno no puede conectarse a supabase.co. La migración y sus políticas se prueban en un Postgres local (PGlite), y el panel y el flujo completo, con el almacén de demostración. La primera conexión real debe verificarse al configurar la cuenta.
 - **El precio se recalcula en el servidor** a partir del archivo; el del navegador es orientativo.
 - **Volumen efectivo** = paredes (área × perímetros × ancho de línea) + interior × relleno. No modela capas superiores/inferiores ni soportes: el desperdicio los absorbe. Cambios de color AMS por pieza = colores − 1.
 - La **preparación** se cobra una vez por pedido y el **pedido mínimo** se aplica al pedido completo, antes del descuento y de la urgencia (orden literal de la fórmula).
@@ -334,5 +410,5 @@ grep -rnE "\[(CONFIGURAR|CONFIRMAR|MARCADOR|MI |FOTO|NOMBRE|DIRECCIÓN|HORARIO|N
 ## Hoja de ruta
 
 - **Fase 1 — Base y ventas** ✔︎ Sistema de diseño, layout, portada con el momento 3D, servicios, empresas, contacto, cotizador completo, legales, SEO y modo demo.
-- **Fase 2 — Gestión**: Supabase (migraciones, RLS, semilla), autenticación con enlace mágico, panel `/admin`, seguimiento `/pedido/[codigo]`, notificaciones al cliente por cambio de estado.
+- **Fase 2 — Gestión** ✔︎ Supabase (migración, RLS, semilla), enlace mágico para `ADMIN_EMAILS`, panel `/admin` (resumen, tablero, ficha, clientes, precios, CSV), seguimiento `/pedido/[codigo]` con aprobación del cliente y correos de avance.
 - **Fase 3 — Escala**: tienda con variantes y enlace a MercadoLibre, educación (talleres y kits, formulario para colegios), proyectos, guías en MDX (3 borradores), suscripción, pagos detrás de bandera y panel de métricas.

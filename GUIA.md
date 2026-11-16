@@ -7,25 +7,28 @@ Esta guía explica, sin tecnicismos, cómo funciona el sitio de SAGAL Robotics, 
 1. [La idea general](#1-la-idea-general)
 2. [Qué pasa cuando alguien visita el sitio](#2-qué-pasa-cuando-alguien-visita-el-sitio)
 3. [Qué pasa cuando alguien pide una cotización](#3-qué-pasa-cuando-alguien-pide-una-cotización)
-4. [El mapa de archivos](#4-el-mapa-de-archivos)
-5. [Los archivos que sí puedes tocar](#5-los-archivos-que-sí-puedes-tocar)
-6. [Recetas: cambios comunes paso a paso](#6-recetas-cambios-comunes-paso-a-paso)
-7. [Cómo sugerir cambios](#7-cómo-sugerir-cambios)
-8. [Cómo se publica un cambio](#8-cómo-se-publica-un-cambio)
-9. [Si algo se rompe](#9-si-algo-se-rompe)
-10. [Glosario](#10-glosario)
+4. [El panel de administración: tu oficina](#4-el-panel-de-administración-tu-oficina)
+5. [El mapa de archivos](#5-el-mapa-de-archivos)
+6. [Los archivos que sí puedes tocar](#6-los-archivos-que-sí-puedes-tocar)
+7. [Recetas: cambios comunes paso a paso](#7-recetas-cambios-comunes-paso-a-paso)
+8. [Cómo sugerir cambios](#8-cómo-sugerir-cambios)
+9. [Cómo se publica un cambio](#9-cómo-se-publica-un-cambio)
+10. [Si algo se rompe](#10-si-algo-se-rompe)
+11. [Glosario](#11-glosario)
 
 ---
 
 ## 1. La idea general
 
-Piensa en el sitio como un taller con tres zonas:
+Piensa en el sitio como un taller con cinco zonas:
 
 | Zona | Qué es | Dónde vive |
 | --- | --- | --- |
 | **La vitrina** | Las páginas que ve el visitante: inicio, servicios, empresas, contacto… | `src/pages/` |
 | **El mostrador** | Lo que recibe las solicitudes y cotizaciones, revisa que estén bien y te avisa por correo. | `src/pages/api/` y `src/lib/servidor/` |
-| **El cuaderno de configuración** | Los datos del negocio que cambias sin programar: nombre, teléfono, precios, materiales. | `src/config/` |
+| **El cuaderno de configuración** | Los datos del negocio que cambias sin programar: nombre, teléfono, paquetes de diseño. | `src/config/` |
+| **La oficina** | El panel donde ves y gestionas cotizaciones, pedidos, clientes y precios. | `/admin` (archivos en `src/pages/admin/`) |
+| **El archivo** | La base de datos donde quedan guardadas las solicitudes, los clientes, los archivos 3D y el historial. | Supabase (estructura en `supabase/`) |
 
 La mayoría de los cambios que vas a querer hacer están en el **cuaderno de configuración** (`src/config/`) o en el **texto de las páginas** (`src/pages/`). El resto es maquinaria que normalmente no necesitas tocar.
 
@@ -36,6 +39,7 @@ Las herramientas principales:
 - **three.js** dibuja el 3D: el mecanismo de la portada y el visor de piezas del cotizador.
 - **Cloudflare** es donde se publicará el sitio, el "local" donde atiende la vitrina.
 - **Resend** envía los correos.
+- **Supabase** guarda los datos (base de datos y archivos) y maneja el ingreso al panel con un enlace por correo, sin contraseña.
 
 ---
 
@@ -52,18 +56,47 @@ Las herramientas principales:
 
 1. El cliente entra a `/cotizar` y sube su archivo 3D (STL o 3MF).
 2. **Su propio navegador** lee el archivo: calcula medidas y volumen, lo muestra en 3D y revisa si cabe en la impresora. El archivo todavía no se ha enviado a ningún lado.
-3. El cliente elige material, color, calidad, relleno, cantidad, acabado y urgencia. El precio cambia en vivo según las reglas de `src/config/precios.ts`.
+3. El cliente elige material, color, calidad, relleno, cantidad, acabado y urgencia. El precio cambia en vivo según los precios que configuraste en el panel (`/admin/precios`).
 4. Escribe su nombre y correo, marca la casilla de autorización de datos y envía.
 5. El **servidor** (el mostrador) recibe el archivo, **lo vuelve a leer y recalcula el precio**. Así nadie puede engañar al cotizador cambiando el precio en su navegador.
-6. Se envían dos correos:
-   - **Al cliente:** "Recibimos tu cotización" con su número de referencia (por ejemplo `SR-7KQ4M-9XDTA`).
-   - **A ti:** todos los datos, el desglose de costos, de dónde llegó el cliente, el archivo adjunto y un botón para escribirle por WhatsApp.
+6. La solicitud **se guarda** en la base de datos: el cliente (si ya había escrito antes, se reconoce por su correo), el archivo 3D y el historial.
+7. Se envían dos correos:
+   - **Al cliente:** "Recibimos tu cotización", con su número de referencia (por ejemplo `SR-7KQ4M-9XDTA`) y un enlace a su página de seguimiento.
+   - **A ti:** todos los datos, el desglose de costos, de dónde llegó el cliente, el archivo adjunto y botones para abrirla en el panel o escribirle por WhatsApp.
+8. El cliente puede ver en cualquier momento cómo va su pedido en `/pedido/SU-CODIGO`, y aprobar ahí la cotización cuando se la envíes.
 
-Mientras no configures Resend, el sitio está en **modo demo**: todo funciona y se valida, pero no se envían correos y aparece un aviso de "Modo demostración".
+Hay dos **modos demo** independientes:
+- **Sin Supabase**, las solicitudes quedan en un almacén temporal de prueba que se borra al reiniciar, y el panel muestra datos de ejemplo.
+- **Sin Resend**, no se envían correos.
+
+En ambos casos aparece un aviso de "Modo demostración".
 
 ---
 
-## 4. El mapa de archivos
+## 4. El panel de administración: tu oficina
+
+Entra a **`tu-dominio/admin`**, también desde el celular. Para ingresar, escribe tu correo en `/admin/ingresar` y abre el enlace que te llega; no hay contraseña. Solo pueden entrar los correos que pongas en la variable `ADMIN_EMAILS`.
+
+| Pantalla | Qué haces ahí |
+| --- | --- |
+| **Resumen** | Ves cuántas cotizaciones llegaron en la semana, cuántas se volvieron pedido, cuánto has cobrado en el mes, qué está en producción, qué tienes por atender y de dónde llegan tus clientes (Instagram, Google, WhatsApp…). |
+| **Solicitudes** | Un tablero con una columna por estado: Nuevo → Cotizado → Aprobado → En producción → Listo → Entregado → Pagado. Tocas una tarjeta para abrirla. |
+| **Ficha de una solicitud** | Ves todo lo que pidió el cliente, descargas su archivo, revisas el desglose de costos y el historial, y haces las acciones de abajo. |
+| **Clientes** | La lista de personas, empresas y colegios, con su historial y lo que han pagado. Puedes corregir sus datos y anotar cosas. |
+| **Precios** | Cambias precios por kilo, colores, materiales, márgenes, descuentos, urgencias… Mientras escribes ves una cotización de prueba. Al guardar, el cotizador del sitio se actualiza. |
+| **Exportar** | Descargas las solicitudes o los clientes en un archivo para Excel. |
+
+### Qué hacer cuando llega una cotización
+
+1. Te llega un correo. Ábrela en el panel y revisa el archivo.
+2. En **Cotización final** escribe el precio definitivo y los días de entrega. Si tienes un enlace de pago, pégalo también. Deja marcadas "Pasar a Cotizado" y "Avisar al cliente" y pulsa **Guardar cotización**.
+3. El cliente recibe un correo y, en su página de seguimiento, un botón **Aprobar la cotización**. Cuando lo pulsa, te llega un aviso.
+4. A medida que avanzas, usa **Cambiar estado** (En producción, Listo, Entregado, Pagado). Puedes escribirle un mensaje y avisarle por correo en cada paso.
+5. **Nota** sirve para apuntes internos que el cliente no ve. Si marcas la casilla, la nota se convierte en un mensaje visible en su página de seguimiento.
+
+---
+
+## 5. El mapa de archivos
 
 No necesitas memorizar esto. Úsalo como plano cuando quieras ubicar algo. Las marcas indican qué tan seguro es editar cada cosa:
 
@@ -92,7 +125,8 @@ No necesitas memorizar esto. Úsalo como plano cuando quieras ubicar algo. Las m
 | --- | --- | --- |
 | `referencia/` | `diseno.html`: el diseño original del que salió el estilo del sitio. Es de consulta. | ✅ |
 | `public/` | Archivos que se publican tal cual: el ícono de la pestaña (`favicon.svg`) y la imagen para redes sociales (`og/sagal-og.png`). | ✅ |
-| `scripts/` | `generar-og.mjs`: crea la imagen para redes a partir de la marca (`npm run og`). | ⛔ |
+| `scripts/` | `generar-og.mjs` crea la imagen para redes a partir de la marca (`npm run og`); `generar-semilla.mjs` prepara los precios iniciales de la base de datos (`npm run semilla`). | ⛔ |
+| `supabase/` | La estructura de la base de datos (tablas, reglas de seguridad y carpeta de archivos), los datos iniciales y su prueba automática. Se usa una vez, al configurar Supabase. | ⛔ |
 | `src/` | Todo el sitio. Se explica abajo. | — |
 
 ### `src/config/`: el cuaderno de configuración ✅
@@ -100,10 +134,10 @@ No necesitas memorizar esto. Úsalo como plano cuando quieras ubicar algo. Las m
 | Archivo | Qué controla |
 | --- | --- |
 | `marca.ts` | **El más importante.** Nombre de la marca, eslogan, descripción, correo, WhatsApp, Instagram, ubicación, horario, datos legales (responsable, NIT) y volumen de la impresora. Cambias aquí y cambia en todo el sitio. |
-| `precios.ts` | Todo el cotizador: materiales (precio por kilo, densidad, colores), calidades, rellenos, acabados, urgencias, tarifa de máquina, margen, pedido mínimo, descuentos por cantidad, IVA y plazos. **Hoy tiene valores de demostración.** |
+| `precios.ts` | Los **precios iniciales** del cotizador (de demostración). Los precios reales se cambian en el panel, en `/admin/precios`. Este archivo queda como respaldo si la base de datos no responde. |
 | `servicios.ts` | Los tres paquetes de diseño CAD (simple, medio, complejo): para qué son, qué incluyen, revisiones, plazo y precio. |
 | `navegacion.ts` | Los enlaces del menú superior y de los textos legales del pie de página. |
-| `funciones.ts` | Interruptores de funciones futuras (seguimiento de pedidos, pagos en línea, tienda). Están apagados hasta su fase. |
+| `funciones.ts` | Interruptores de funciones: el seguimiento de pedidos está encendido; los pagos en línea y la tienda siguen apagados hasta su fase. |
 
 ### `src/pages/`: las páginas (la vitrina) ⚠️
 
@@ -121,10 +155,14 @@ Cada archivo es una página. El nombre del archivo es la dirección:
 | `nosotros.astro` | `/nosotros` | Quiénes somos. |
 | `politica-de-datos.astro` | `/politica-de-datos` | Política de datos (borrador legal). |
 | `terminos.astro` | `/terminos` | Términos y condiciones (borrador legal). |
+| `pedido/[codigo].astro` | `/pedido/SR-…` | La página de seguimiento de cada cliente: avance, precio, mensajes y botón para aprobar. |
 | `404.astro` | Cualquier dirección que no existe | Página de "no encontrado". |
+| `500.astro` | Cuando algo falla en el servidor | Página de "algo salió mal". |
+| `admin/` | `/admin/…` | **El panel**: resumen, solicitudes, clientes, precios, exportar e ingreso. ⛔ |
 | `robots.txt.ts` | `/robots.txt` | Instrucciones para Google sobre qué indexar. ⛔ |
 | `api/cotizacion.ts` | `/api/cotizacion` | **El mostrador de cotizaciones**: recibe, revisa, recalcula y envía los correos. ⛔ |
 | `api/contacto.ts` | `/api/contacto` | **El mostrador de contacto y empresas.** ⛔ |
+| `api/admin/` | `/api/admin/…` | Guardar precios y exportar CSV desde el panel. ⛔ |
 
 Dentro de un archivo `.astro`, la parte de arriba entre dos líneas `---` es código (por ejemplo, las listas de preguntas frecuentes). La parte de abajo es la página: textos entre etiquetas como `<h2>Título</h2>` o `<p>Párrafo</p>`. Puedes cambiar el texto, pero no las etiquetas.
 
@@ -156,7 +194,11 @@ Las **islas** (`src/components/islas/`) son las partes que "se mueven". Son téc
 
 ### `src/layouts/` ⛔
 
-`Base.astro` es el "molde" que envuelve todas las páginas: pone el encabezado, el pie, el botón de WhatsApp, los datos para Google y redes sociales, y la analítica.
+`Base.astro` es el "molde" que envuelve todas las páginas públicas: pone el encabezado, el pie, el botón de WhatsApp, los datos para Google y redes sociales, y la analítica. `Admin.astro` es el molde del panel.
+
+### `src/middleware.ts` ⛔
+
+El **portero** del panel: antes de mostrar cualquier página de `/admin`, revisa que haya una sesión iniciada con un correo de `ADMIN_EMAILS`. Si no, manda a la página de ingreso.
 
 ### `src/styles/`: la apariencia ⚠️
 
@@ -164,6 +206,7 @@ Las **islas** (`src/components/islas/`) son las partes que "se mueven". Son téc
 | --- | --- |
 | `tokens.css` | **La paleta y las medidas**: colores (azul `#16325C`, naranja `#FF6A13`…), tamaños de letra, espacios. Cambiar un color aquí lo cambia en todo el sitio. |
 | `componentes.css` | El aspecto de botones, campos, tablas, avisos, etiquetas, preguntas frecuentes. |
+| `admin.css` | El aspecto propio del panel. |
 | `global.css` | Reglas base de todo el sitio. ⛔ |
 
 ### `src/lib/`: la maquinaria ⛔
@@ -175,20 +218,22 @@ Las **islas** (`src/components/islas/`) son las partes que "se mueven". Son téc
 | `solicitudes/` | Revisa que los formularios estén bien llenos y crea los números de referencia. |
 | `servidor/` | Envía correos (Resend), verifica el antispam (Turnstile) y arma el contenido de los correos. |
 | `cliente/` | Anota de dónde llegan las visitas (UTM) y la analítica (apagada por ahora). |
+| `datos/` | Habla con la base de datos: guarda y lee solicitudes, clientes, archivos y precios. Si no hay Supabase, usa el almacén de demostración. |
+| `gestion/` | Los estados del pedido, las cuentas del resumen (conversión, ingresos, origen) y la exportación a Excel. |
 | `seo.ts` | Los datos que lee Google para mostrar tu negocio (ubicación, servicios, preguntas). |
 
-Los archivos que terminan en `.test.ts` son **pruebas automáticas**: comprueban que el motor de precios y el lector de archivos hagan bien las cuentas. Corren con `npm test`.
+Los archivos que terminan en `.test.ts` son **pruebas automáticas**: comprueban que el motor de precios, el lector de archivos y las cuentas del panel funcionen, y que las reglas de seguridad de la base de datos no dejen ver datos a quien no debe. Corren con `npm test`.
 
 ---
 
-## 5. Los archivos que sí puedes tocar
+## 6. Los archivos que sí puedes tocar
 
-Para empezar, concéntrate en estos cuatro:
+Para empezar, concéntrate en estos tres, y en el panel para los precios:
 
 1. **`src/config/marca.ts`**: tus datos.
-2. **`src/config/precios.ts`**: tus precios y materiales.
-3. **`src/config/servicios.ts`**: los paquetes de diseño.
-4. **Los textos de `src/pages/`**: lo que dice cada página.
+2. **`src/config/servicios.ts`**: los paquetes de diseño.
+3. **Los textos de `src/pages/`**: lo que dice cada página.
+4. **Los precios y materiales**: en el panel, `/admin/precios`, sin tocar archivos.
 
 ### Reglas de oro al editar
 
@@ -205,7 +250,7 @@ En VS Code, pulsa **`Ctrl + Shift + F`** (buscar en todos los archivos) y escrib
 
 ---
 
-## 6. Recetas: cambios comunes paso a paso
+## 7. Recetas: cambios comunes paso a paso
 
 Antes de cualquier receta, ten el sitio corriendo en tu computador (`npm run dev` en la terminal de VS Code, y el navegador en `http://localhost:4321`). Al guardar un archivo (`Ctrl + S`), el navegador se actualiza solo.
 
@@ -231,19 +276,15 @@ Mismo archivo, `instagram: '[MI_USUARIO]',` cámbialo por tu usuario **sin la ar
 
 ### Cambiar el precio de un material
 
-Archivo: `src/config/precios.ts`. Busca el material, por ejemplo `nombre: 'PLA'`, y unas líneas abajo:
+1. Entra a `/admin/precios`.
+2. En **Materiales**, busca el material (por ejemplo PLA) y cambia **Precio por kg**.
+3. Arriba verás la cotización de prueba con el nuevo valor. Pulsa **Guardar cambios**.
 
-```ts
-precioKg: 100000, // [CONFIGURAR] DEMO
-```
-
-Cambia el número por tu precio real del kilo de filamento en pesos. Abre `/cotizar`, sube un archivo y verás el nuevo precio.
-
-Cuando todos los precios sean reales, cambia al principio del archivo `esDemo: true,` por `esDemo: false,` para quitar el aviso de "precios de demostración".
+Cuando todos los precios sean reales, desmarca **Precios de demostración** (en el bloque General) y guarda: el cotizador deja de mostrar ese aviso.
 
 ### Desactivar un material o un color
 
-En `src/config/precios.ts`, cambia su `activo: true,` por `activo: false,`. Deja de aparecer en el cotizador sin borrarlo.
+En `/admin/precios`, desmarca **Activo en el cotizador** del material (o **Activo** del color) y guarda. Deja de aparecer en el cotizador sin borrarse.
 
 ### Cambiar el texto de una página
 
@@ -274,7 +315,7 @@ Archivo: `src/config/marca.ts`: `nombre`, `nombreFuerte` y `nombreSuave`. Despu�
 
 ---
 
-## 7. Cómo sugerir cambios
+## 8. Cómo sugerir cambios
 
 Tienes cuatro caminos, de más fácil a más directo.
 
@@ -338,7 +379,7 @@ Si no estás seguro de un cambio, usa el camino A o B: es mejor preguntar que ro
 
 ---
 
-## 8. Cómo se publica un cambio
+## 9. Cómo se publica un cambio
 
 El recorrido de cualquier cambio es:
 
@@ -355,7 +396,7 @@ Hoy todo el sitio está en el pull request #1, que aún no se ha fusionado. Cuan
 
 ---
 
-## 9. Si algo se rompe
+## 10. Si algo se rompe
 
 - **En tu computador, el sitio deja de cargar después de editar:** mira la terminal. Casi siempre es una comilla, una coma o una llave borrada, y el error dice el archivo y la línea. Deshaz con `Ctrl + Z` en VS Code.
 - **Quieres descartar todos tus cambios locales sin subir:** en VS Code, en Control de código fuente, clic derecho sobre el archivo → **Discard Changes**.
@@ -364,7 +405,7 @@ Hoy todo el sitio está en el pull request #1, que aún no se ha fusionado. Cuan
 
 ---
 
-## 10. Glosario
+## 11. Glosario
 
 | Palabra | Qué significa |
 | --- | --- |
@@ -383,4 +424,8 @@ Hoy todo el sitio está en el pull request #1, que aún no se ha fusionado. Cuan
 | **Variable de entorno / clave** | Datos secretos, como la clave de Resend. Van en Cloudflare, **nunca** en el código. |
 | **Marcador** | Un texto entre corchetes, como `[NIT O CÉDULA]`, que indica un dato pendiente. |
 | **SEO** | Lo que ayuda a que Google encuentre y muestre tu sitio. |
+| **Panel** | La zona privada `/admin` donde gestionas el negocio. |
+| **Base de datos** | Donde quedan guardados las solicitudes, los clientes y los precios (Supabase). |
+| **Enlace mágico** | Un enlace que te llega por correo para entrar al panel, sin contraseña. |
+| **RLS** | Reglas de la base de datos que deciden quién puede ver cada dato. Aquí: solo los administradores. |
 | **UTM** | Etiquetas en un enlace que dicen de qué campaña vino una visita. |
