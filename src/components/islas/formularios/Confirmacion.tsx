@@ -26,9 +26,9 @@ export function Confirmacion({
 
   return (
     <div className="confirmacion" ref={ref} tabIndex={-1} role="status" aria-live="polite">
-      {respuesta.demo && (
+      {(respuesta.demo || respuesta.datosDemo) && (
         <p className="aviso aviso--alerta">
-          <strong>Modo demostración.</strong> {respuesta.mensaje} Configura Resend para recibir las solicitudes (ver README).
+          <strong>Modo demostración.</strong> {respuesta.mensaje} Configura Supabase y Resend para recibir las solicitudes (ver README).
         </p>
       )}
       <h3 className="titulo-3">{titulo}</h3>
@@ -40,6 +40,11 @@ export function Confirmacion({
       )}
       {children}
       <div className="grupo-botones">
+        {respuesta.seguimiento && (
+          <a className="boton boton--primario" href={respuesta.seguimiento}>
+            Ver el estado de mi solicitud
+          </a>
+        )}
         {whatsapp && (
           <a className="boton boton--azul" href={whatsapp} target="_blank" rel="noopener" data-evento="clic_whatsapp" data-origen="confirmacion">
             Escribirnos por WhatsApp

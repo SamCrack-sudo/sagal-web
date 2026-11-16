@@ -6,7 +6,7 @@
 import type { APIRoute } from 'astro';
 import { REGLAS_ADJUNTOS, texto, validarArchivos, validarEmpresa, type Errores } from '@/lib/solicitudes/validacion';
 import { TIPOS_SOLICITUD } from '@/lib/solicitudes/tipos';
-import { json, leerFormulario, notificar, prepararContexto } from '@/lib/servidor/formularios';
+import { json, leerFormulario, registrarYNotificar, prepararContexto } from '@/lib/servidor/formularios';
 import type { Filas } from '@/lib/servidor/plantillas';
 
 export const prerender = false;
@@ -33,11 +33,18 @@ export const POST: APIRoute = async ({ request }) => {
   if (errorAdjuntos) errores.adjuntos = errorAdjuntos;
 
   let filas: Filas;
+  let datos: Record<string, unknown> = {};
+  let contactoExtra: { empresa?: string; nit?: string; facturacion?: Record<string, string> } | undefined;
   if (tipo === 'empresa') {
     const empresa = validarEmpresa(form.campos);
     Object.assign(errores, empresa.errores);
     if (mensaje.length < 10) errores.mensaje = 'Describe la pieza o el problema (mínimo 10 caracteres).';
     const e = empresa.datos;
+    datos = { sector: e.sector, tipoPieza: e.tipoPieza, cantidad: e.cantidad, urgencia: e.urgencia };
+    const facturacion = Object.fromEntries(
+      Object.entries({ razonSocial: e.razonSocial, correo: e.correoFacturacion, direccion: e.direccionFacturacion }).filter(([, v]) => v),
+    ) as Record<string, string>;
+    contactoExtra = { empresa: e.empresa, nit: e.nit, facturacion };
     filas = [
       ['Empresa', e.empresa],
       ['NIT', e.nit ?? 'No indicado'],
@@ -57,6 +64,7 @@ export const POST: APIRoute = async ({ request }) => {
   } else {
     if (mensaje.length < 10) errores.mensaje = 'Cuéntanos un poco más (mínimo 10 caracteres).';
     const servicio = SERVICIOS[texto(form.campos.servicio)] ?? SERVICIOS.otro!;
+    datos = { servicio };
     filas = [
       ['Servicio', servicio],
       ['Mensaje', mensaje],
@@ -67,12 +75,15 @@ export const POST: APIRoute = async ({ request }) => {
   const ctx = await prepararContexto(form, request, errores);
   if (ctx instanceof Response) return ctx;
 
-  const r = await notificar(ctx, {
-    tipo: TIPOS_SOLICITUD[tipo],
+  const r = await registrarYNotificar(ctx, {
+    tipo,
+    tipoLegible: TIPOS_SOLICITUD[tipo],
     esCotizacion: false,
     filasCliente: filas,
     filasDueno: [['Código', ctx.codigo], ...filas],
-    archivos: adjuntos,
+    archivos: adjuntos.map((archivo) => ({ archivo, rol: 'adjunto' as const })),
+    contactoExtra,
+    guardar: { descripcion: mensaje, datos },
   });
   return json(r, r.ok ? 200 : 502);
 };

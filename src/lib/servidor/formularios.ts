@@ -9,6 +9,9 @@ import { verificarTurnstile } from './turnstile';
 import { entorno } from './entorno';
 import { aBase64, enviarCorreo, type Adjunto } from './correo';
 import { correoClienteRecibido, correoDuenoNuevo, type Filas } from './plantillas';
+import { repositorioPublico } from '@/lib/datos';
+import type { NuevaSolicitud, RolArchivo } from '@/lib/datos/tipos';
+import type { TipoSolicitud } from '@/lib/solicitudes/tipos';
 
 /** Límite del cuerpo de la petición (los Workers gratuitos aceptan hasta 100 MB). */
 export const TAM_MAX_PETICION = 80 * 1024 * 1024;
@@ -52,6 +55,8 @@ export interface Contexto {
   origen: OrigenVisita | null;
   codigo: string;
   env: ReturnType<typeof entorno>;
+  /** Origen (protocolo + dominio) de la petición, para armar enlaces absolutos. */
+  sitio: string;
 }
 
 /**
@@ -92,7 +97,7 @@ export async function prepararContexto(
     origen = null;
   }
 
-  return { contacto: datos, origen, codigo, env };
+  return { contacto: datos, origen, codigo, env, sitio: new URL(request.url).origin };
 }
 
 export function filasContacto(c: DatosContacto): Filas {
@@ -136,75 +141,105 @@ export async function prepararAdjuntos(archivos: File[]): Promise<{ adjuntos: Ad
 }
 
 /**
- * Envía el acuse al cliente y el aviso al dueño. En modo demo no envía nada.
- * Fase 2: además se guardará la solicitud en Supabase (y los archivos en Storage).
+ * Guarda la solicitud (Supabase o almacén de demostración), luego envía el
+ * acuse al cliente y el aviso al dueño (si Resend está configurado).
+ * Si la base de datos falla, el correo al dueño sirve de respaldo.
  */
-export async function notificar(
+export async function registrarYNotificar(
   ctx: Contexto,
   d: {
-    tipo: string;
+    tipo: TipoSolicitud;
+    tipoLegible: string;
     esCotizacion: boolean;
     filasCliente: Filas;
     filasDueno: Filas;
-    archivos: File[];
+    archivos: { archivo: File; rol: RolArchivo }[];
     preciosDemo?: boolean;
-    enlaceSeguimiento?: string;
+    contactoExtra?: Pick<NuevaSolicitud['contacto'], 'empresa' | 'nit' | 'facturacion'>;
+    guardar: Omit<NuevaSolicitud, 'tipo' | 'contacto' | 'origen' | 'archivos'>;
   },
 ): Promise<RespuestaSolicitud> {
+  const repo = repositorioPublico();
+  let solicitudId: string | null = null;
+  let errorDatos = false;
+  try {
+    const r = await repo.crearSolicitud(
+      {
+        tipo: d.tipo,
+        contacto: { ...ctx.contacto, ...d.contactoExtra },
+        origen: ctx.origen,
+        archivos: d.archivos,
+        ...d.guardar,
+      },
+      ctx.codigo,
+    );
+    solicitudId = r.id;
+  } catch (e) {
+    errorDatos = true;
+    console.error('[datos]', e instanceof Error ? e.message : e);
+  }
+
+  const seguimiento = solicitudId ? `/pedido/${ctx.codigo}` : undefined;
+  const datosDemo = repo.modo === 'demo';
+
   if (ctx.env.demo || !ctx.env.resendApiKey) {
+    if (errorDatos) return { ok: false, mensaje: `No pudimos registrar tu solicitud. Escríbenos a ${marca.contacto.correo}.` };
     return {
       ok: true,
       demo: true,
+      datosDemo,
       codigo: ctx.codigo,
-      mensaje: 'Modo demostración: la solicitud se validó, pero no se envió ni se guardó.',
+      seguimiento,
+      mensaje: datosDemo
+        ? 'Modo demostración: no se envían correos y la solicitud queda en un almacén temporal que se borra al reiniciar.'
+        : 'La solicitud se guardó, pero los correos están desactivados (falta configurar Resend).',
     };
   }
 
-  const { adjuntos, omitidos } = await prepararAdjuntos(d.archivos);
+  const archivos = d.archivos.map((a) => a.archivo);
+  const { adjuntos, omitidos } = await prepararAdjuntos(archivos);
   const telefono = ctx.contacto.telefono ? normalizarTelefono(ctx.contacto.telefono) : '';
   const whatsapp = telefono
-    ? enlaceWhatsApp(
-        `Hola ${ctx.contacto.nombre}, te escribo de ${marca.nombre} por tu solicitud ${ctx.codigo}.`,
-        telefono,
-      )
+    ? enlaceWhatsApp(`Hola ${ctx.contacto.nombre}, te escribo de ${marca.nombre} por tu solicitud ${ctx.codigo}.`, telefono)
     : null;
 
   const config = { apiKey: ctx.env.resendApiKey, remitente: ctx.env.remitente };
+  const notas: string[] = [];
+  if (omitidos.length) notas.push(`No se adjuntaron por tamaño: ${omitidos.join(', ')}. Están en el panel.`);
+  if (errorDatos) notas.push('ATENCIÓN: no se pudo guardar en la base de datos. Este correo es el único registro de la solicitud.');
   const aviso = correoDuenoNuevo({
     codigo: ctx.codigo,
-    tipo: d.tipo,
+    tipo: d.tipoLegible,
     nombre: ctx.contacto.nombre,
     correoCliente: ctx.contacto.correo,
     enlaceWhatsApp: whatsapp,
+    enlacePanel: solicitudId && !datosDemo ? `${ctx.sitio}/admin/solicitudes/${solicitudId}` : undefined,
     filas: [...d.filasDueno, ...filasContacto(ctx.contacto), ...filasOrigen(ctx.origen)],
-    notaAdjuntos: omitidos.length
-      ? `No se adjuntaron por tamaño: ${omitidos.join(', ')}. Pídeselos al cliente.`
-      : undefined,
+    notaAdjuntos: notas.length ? notas.join(' ') : undefined,
   });
   const envioDueno = await enviarCorreo(
     { para: ctx.env.correoDueno, asunto: aviso.asunto, html: aviso.html, texto: aviso.texto, responderA: ctx.contacto.correo, adjuntos },
     config,
   );
-  if (!envioDueno.ok) {
-    console.error('[correo dueño]', envioDueno.error);
+  if (!envioDueno.ok) console.error('[correo dueño]', envioDueno.error);
+  if (errorDatos && !envioDueno.ok) {
     return { ok: false, mensaje: `No pudimos registrar tu solicitud. Escríbenos a ${marca.contacto.correo}.` };
   }
 
   const acuse = correoClienteRecibido({
     nombre: ctx.contacto.nombre,
     codigo: ctx.codigo,
-    tipo: d.tipo,
+    tipo: d.tipoLegible,
     filas: d.filasCliente,
     esCotizacion: d.esCotizacion,
     preciosDemo: d.preciosDemo,
-    enlaceSeguimiento: d.enlaceSeguimiento,
+    enlaceSeguimiento: seguimiento ? `${ctx.sitio}${seguimiento}` : undefined,
   });
   const envioCliente = await enviarCorreo(
     { para: ctx.contacto.correo, asunto: acuse.asunto, html: acuse.html, texto: acuse.texto, responderA: ctx.env.correoDueno },
     config,
   );
-  // Si falla solo el acuse, la solicitud ya quedó registrada en el correo del dueño.
   if (!envioCliente.ok) console.error('[correo cliente]', envioCliente.error);
 
-  return { ok: true, codigo: ctx.codigo };
+  return { ok: true, codigo: ctx.codigo, seguimiento, datosDemo };
 }

@@ -85,10 +85,12 @@ export function correoDuenoNuevo(d: {
   filas: Filas;
   enlaceWhatsApp: string | null;
   correoCliente: string;
+  enlacePanel?: string;
   notaAdjuntos?: string;
 }) {
   const titulo = `Nueva ${d.tipo.toLowerCase()} · ${d.codigo}`;
   const botones = [
+    d.enlacePanel ? boton('Abrir en el panel', d.enlacePanel) : '',
     d.enlaceWhatsApp ? boton(`Escribir a ${d.nombre} por WhatsApp`, d.enlaceWhatsApp, '#1D6B3A', '#FFFFFF') : '',
     boton('Responder por correo', `mailto:${d.correoCliente}?subject=${encodeURIComponent(`${marca.nombre} · ${d.codigo}`)}`, '#16325C', '#F2F5F9'),
   ]
@@ -100,6 +102,10 @@ ${d.notaAdjuntos ? `<p style="margin:16px 0 0;font-size:14px;color:#3D4652">${es
   return {
     asunto: titulo,
     html: marco(titulo, cuerpo),
-    texto: textoPlano(titulo, [d.enlaceWhatsApp ? `WhatsApp: ${d.enlaceWhatsApp}` : `Correo: ${d.correoCliente}`, d.notaAdjuntos ?? ''], d.filas),
+    texto: textoPlano(
+      titulo,
+      [d.enlacePanel ? `Panel: ${d.enlacePanel}` : '', d.enlaceWhatsApp ? `WhatsApp: ${d.enlaceWhatsApp}` : `Correo: ${d.correoCliente}`, d.notaAdjuntos ?? ''],
+      d.filas,
+    ),
   };
 }

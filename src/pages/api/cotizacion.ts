@@ -6,8 +6,7 @@
  */
 import type { APIRoute } from 'astro';
 import { marca } from '@/config/marca';
-import { configPreciosInicial } from '@/config/precios';
-import { funciones } from '@/config/funciones';
+import { repositorioPublico } from '@/lib/datos';
 import {
   calcularMetricas,
   ErrorMalla,
@@ -20,12 +19,12 @@ import {
 } from '@/lib/malla';
 import { cotizar, ErrorCotizacion, formatoCOP, formatoNumero, type EntradaCotizacion } from '@/lib/precios/motor';
 import { REGLAS_FOTOS, texto, validarArchivos, type Errores } from '@/lib/solicitudes/validacion';
-import { json, leerFormulario, notificar, prepararContexto } from '@/lib/servidor/formularios';
+import { json, leerFormulario, registrarYNotificar, prepararContexto } from '@/lib/servidor/formularios';
 import type { Filas } from '@/lib/servidor/plantillas';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request, site }) => {
+export const POST: APIRoute = async ({ request }) => {
   const form = await leerFormulario(request);
   if (form instanceof Response) return form;
   const modalidad = form.campos.modalidad === 'diseno' ? 'diseno' : 'archivo';
@@ -53,12 +52,14 @@ export const POST: APIRoute = async ({ request, site }) => {
       ['Cantidad', cantidad || 'No indicada'],
       ['Fotos', fotos.length ? fotos.map((f) => f.name).join(', ') : 'Sin fotos'],
     ];
-    const r = await notificar(ctx, {
-      tipo: 'Solicitud de diseño CAD',
+    const r = await registrarYNotificar(ctx, {
+      tipo: 'diseno_cad',
+      tipoLegible: 'Solicitud de diseño CAD',
       esCotizacion: false,
       filasCliente: filas,
       filasDueno: [['Código', ctx.codigo], ...filas],
-      archivos: fotos,
+      archivos: fotos.map((archivo) => ({ archivo, rol: 'foto' as const })),
+      guardar: { descripcion, datos: { medidas, uso, cantidad } },
     });
     return json(r, r.ok ? 200 : 502);
   }
@@ -88,7 +89,7 @@ export const POST: APIRoute = async ({ request, site }) => {
     return json({ ok: false, mensaje: 'Parámetros de cotización inválidos.' }, 400);
   }
 
-  const config = configPreciosInicial; // Fase 2: se leerá de Supabase.
+  const config = await repositorioPublico().leerPrecios();
   const entrada: EntradaCotizacion = {
     volumenMm3: metricas.volumenMm3,
     areaMm2: metricas.areaMm2,
@@ -161,15 +162,30 @@ export const POST: APIRoute = async ({ request, site }) => {
     ['Alertas', alertas.length ? alertas.join(' ') : 'Ninguna'],
   ];
 
-  const enlaceSeguimiento = funciones.seguimientoPedidos ? new URL(`/pedido/${ctx.codigo}`, site).toString() : undefined;
-  const r = await notificar(ctx, {
-    tipo: 'Cotización de impresión 3D',
+  const r = await registrarYNotificar(ctx, {
+    tipo: 'cotizacion',
+    tipoLegible: 'Cotización de impresión 3D',
     esCotizacion: true,
     filasCliente,
     filasDueno,
-    archivos: [modelo],
+    archivos: [{ archivo: modelo, rol: 'modelo' }],
     preciosDemo: config.esDemo,
-    enlaceSeguimiento,
+    guardar: {
+      descripcion: notas || undefined,
+      datos: { archivo: modelo.name, unidad, alertas, preciosDemo: config.esDemo },
+      parametros: { ...entrada, volumenMm3: undefined, areaMm2: undefined },
+      metricas: {
+        volumenMm3: metricas.volumenMm3,
+        areaMm2: metricas.areaMm2,
+        tamano: metricas.caja.tamano,
+        triangulos: metricas.triangulos,
+        cabe: encaje.cabe,
+        cabeRotada: encaje.cabeRotada,
+      },
+      desglose: { pieza: resultado.pieza, pedido: resultado.pedido, entrega: resultado.entrega },
+      precioEstimado: resultado.pedido.total,
+      diasEntrega: resultado.entrega.diasHabiles,
+    },
   });
   return json({ ...r, total: resultado.pedido.total }, r.ok ? 200 : 502);
 };

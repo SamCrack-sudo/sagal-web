@@ -28,6 +28,8 @@ export default defineConfig({
     }),
   ],
   trailingSlash: 'never',
+  // Rechaza envíos de formularios desde otros sitios (protección CSRF del panel).
+  security: { checkOrigin: true },
   devToolbar: { enabled: false },
   build: { format: 'file' },
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
@@ -46,6 +48,11 @@ export default defineConfig({
       RESEND_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
       RESEND_FROM: envField.string({ context: 'server', access: 'secret', optional: true }),
       OWNER_EMAIL: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // Fase 2: base de datos, archivos y acceso al panel. Sin ellas, datos de demostración.
+      SUPABASE_URL: envField.string({ context: 'server', access: 'secret', optional: true }),
+      SUPABASE_ANON_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+      SUPABASE_SERVICE_ROLE_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+      ADMIN_EMAILS: envField.string({ context: 'server', access: 'secret', optional: true }),
     },
     validateSecrets: false,
   },

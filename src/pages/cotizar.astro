@@ -3,10 +3,15 @@ import Base from '@/layouts/Base.astro';
 import CabeceraPagina from '@/components/CabeceraPagina.astro';
 import Faq from '@/components/Faq.astro';
 import Cotizador from '@/components/islas/cotizador/Cotizador';
-import { configPreciosInicial } from '@/config/precios';
+import { repositorioPublico } from '@/lib/datos';
 import { marca } from '@/config/marca';
 import { migas, paginaFaq, servicio, type PreguntaFrecuente } from '@/lib/seo';
 
+export const prerender = false;
+
+// Precios y materiales en vivo (editables desde /admin/precios).
+const configPrecios = await repositorioPublico().leerPrecios();
+Astro.response.headers.set('Cache-Control', 'public, max-age=60');
 const v = marca.equipos.volumenImpresion;
 
 const preguntas: PreguntaFrecuente[] = [
@@ -31,7 +36,7 @@ const preguntas: PreguntaFrecuente[] = [
   },
   {
     pregunta: '¿Puedo pedir piezas en varios colores?',
-    respuesta: `Sí. Con el sistema ${marca.equipos.sistemaColor} imprimimos hasta ${configPreciosInicial.maxColores} colores en una misma pieza. Lo ideal es un 3MF con los colores asignados; si no, descríbenos qué va de cada color.`,
+    respuesta: `Sí. Con el sistema ${marca.equipos.sistemaColor} imprimimos hasta ${configPrecios.maxColores} colores en una misma pieza. Lo ideal es un 3MF con los colores asignados; si no, descríbenos qué va de cada color.`,
   },
   {
     pregunta: '¿Cómo se paga?',
@@ -72,7 +77,7 @@ const jsonLd = [
 
   <section class="seccion seccion--cotizador" aria-label="Cotizador">
     <div class="contenedor contenedor--amplio">
-      <Cotizador client:load config={configPreciosInicial} volumen={marca.equipos.volumenImpresion} />
+      <Cotizador client:load config={configPrecios} volumen={marca.equipos.volumenImpresion} />
     </div>
   </section>
 

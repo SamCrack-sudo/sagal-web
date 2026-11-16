@@ -4,10 +4,15 @@ import CabeceraPagina from '@/components/CabeceraPagina.astro';
 import BandaCta from '@/components/BandaCta.astro';
 import Faq from '@/components/Faq.astro';
 import { marca } from '@/config/marca';
-import { configPreciosInicial as precios } from '@/config/precios';
+import { repositorioPublico } from '@/lib/datos';
 import { migas, paginaFaq, servicio, type PreguntaFrecuente } from '@/lib/seo';
 import { formatoNumero } from '@/lib/precios/motor';
 
+export const prerender = false;
+
+// Materiales y calidades en vivo (editables desde /admin/precios).
+const precios = await repositorioPublico().leerPrecios();
+Astro.response.headers.set('Cache-Control', 'public, max-age=300');
 const v = marca.equipos.volumenImpresion;
 const materiales = precios.materiales.filter((m) => m.activo);
 const calidades = precios.calidades.filter((q) => q.activo);

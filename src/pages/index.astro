@@ -8,7 +8,6 @@ import { configPreciosInicial } from '@/config/precios';
 import { negocioLocal, paginaFaq, type PreguntaFrecuente } from '@/lib/seo';
 
 const v = marca.equipos.volumenImpresion;
-const materiales = configPreciosInicial.materiales.filter((m) => m.activo).map((m) => m.nombre);
 const whatsapp = enlaceWhatsApp(`Hola ${marca.nombre}, quiero cotizar un proyecto.`);
 
 const lineas = [
@@ -63,7 +62,8 @@ const preguntas: PreguntaFrecuente[] = [
   },
   {
     pregunta: '¿Qué materiales manejan?',
-    respuesta: `Trabajamos con ${materiales.join(', ')}, entre otros, y te recomendamos el adecuado según temperatura, esfuerzo, intemperie o flexibilidad. [CONFIGURAR: catálogo real de materiales]`,
+    respuesta:
+      'Trabajamos con varios materiales técnicos y te recomendamos el adecuado según temperatura, esfuerzo, intemperie o flexibilidad. La lista actualizada está en la página de impresión 3D.',
   },
   {
     pregunta: '¿Atienden empresas?',
@@ -164,7 +164,7 @@ const jsonLd = [negocioLocal(Astro.site), paginaFaq(preguntas)];
       <dl class="cta-cotizador__ficha">
         <div><dt>Formatos</dt><dd>STL · 3MF</dd></div>
         <div><dt>Medidas</dt><dd>Leídas del archivo</dd></div>
-        <div><dt>Materiales</dt><dd>{materiales.join(' · ')}</dd></div>
+        <div><dt>Materiales</dt><dd><a class="enlace" href="/servicios/impresion-3d">Según el uso de la pieza</a></dd></div>
         <div><dt>Colores</dt><dd>Hasta {configPreciosInicial.maxColores} por pieza</dd></div>
         <div><dt>Resultado</dt><dd>Precio y plazo estimados</dd></div>
       </dl>
@@ -263,8 +263,6 @@ const jsonLd = [negocioLocal(Astro.site), paginaFaq(preguntas)];
             <dd>{marca.equipos.sistemaColor}</dd>
             <dt>Volumen de impresión</dt>
             <dd>{v.x} × {v.y} × {v.z} mm</dd>
-            <dt>Materiales</dt>
-            <dd>{materiales.join(', ')}</dd>
           </dl>
         </div>
       </div>

@@ -54,8 +54,12 @@ export interface DatosEmpresa {
 export interface RespuestaSolicitud {
   ok: boolean;
   codigo?: string;
-  /** true cuando el sitio está en modo demo y nada se envió ni guardó. */
+  /** true cuando no se enviaron correos (falta Resend). */
   demo?: boolean;
+  /** true cuando los datos quedaron en el almacén temporal de demostración. */
+  datosDemo?: boolean;
+  /** Ruta de seguimiento público, p. ej. /pedido/SR-XXXXX-XXXXX */
+  seguimiento?: string;
   mensaje?: string;
   errores?: Record<string, string>;
   /** Solo en cotizaciones: total recalculado en el servidor. */
