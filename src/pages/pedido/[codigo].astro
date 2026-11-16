@@ -24,7 +24,10 @@ let mensajeAccion: string | null = null;
 if (Astro.request.method === 'POST' && esCodigoValido(codigo, marca.prefijo)) {
   const datos = await Astro.request.formData();
   if (datos.get('accion') === 'aprobar') {
-    const aprobado = await repo.aprobarPorCliente(codigo);
+    const aprobado = await repo.aprobarPorCliente(codigo).catch((e) => {
+      console.error('[aprobar]', e instanceof Error ? e.message : e);
+      return null;
+    });
     if (aprobado) {
       await avisarAprobacion(aprobado, Astro.url.origin);
       return Astro.redirect(`/pedido/${codigo}?aprobada=1`, 303);
@@ -33,12 +36,19 @@ if (Astro.request.method === 'POST' && esCodigoValido(codigo, marca.prefijo)) {
   }
 }
 
-const detalle = esCodigoValido(codigo, marca.prefijo) ? await repo.buscarPorCodigo(codigo) : null;
-if (!detalle) Astro.response.status = 404;
+let fallaDatos = false;
+let detalle: Awaited<ReturnType<typeof repo.buscarPorCodigo>> = null;
+try {
+  detalle = esCodigoValido(codigo, marca.prefijo) ? await repo.buscarPorCodigo(codigo) : null;
+} catch (e) {
+  console.error('[seguimiento]', e instanceof Error ? e.message : e);
+  fallaDatos = true;
+}
+if (!detalle) Astro.response.status = fallaDatos ? 503 : 404;
 Astro.response.headers.set('Cache-Control', 'private, no-store');
 Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 
-const config = await repo.leerPrecios();
+const config = detalle ? await repo.leerPrecios() : null;
 const s = detalle?.solicitud;
 const estado = s ? ESTADO_PARA_CLIENTE[s.estado] : null;
 const actual = s ? indiceFlujo(s.estado) : -1;
@@ -49,7 +59,7 @@ const verPago = s ? muestraPago(s.estado) && s.estado !== 'cotizado' : false;
 const historial = detalle?.eventos.filter((e) => e.visibleCliente).reverse() ?? [];
 const nombreCorto = detalle?.cliente.nombre.split(' ')[0] ?? '';
 const aprobadaAhora = Astro.url.searchParams.get('aprobada') === '1';
-const resumen = s ? resumenParametros(s, config) : [];
+const resumen = s && config ? resumenParametros(s, config) : [];
 const titulo = s ? `${TIPOS_SOLICITUD[s.tipo]} ${s.codigo}` : 'Pedido no encontrado';
 ---
 
@@ -61,7 +71,14 @@ const titulo = s ? `${TIPOS_SOLICITUD[s.tipo]} ${s.codigo}` : 'Pedido no encontr
   mensajeWhatsApp={`Hola ${marca.nombre}, consulto por mi solicitud ${codigo}.`}
 >
   {
-    s && estado ? (
+    fallaDatos ? (
+      <CabeceraPagina
+        slot="cabecera"
+        rotulo="Seguimiento"
+        titulo="No pudimos consultar tu pedido"
+        entrada={`Tenemos un problema temporal. Inténtalo en unos minutos o escríbenos a ${marca.contacto.correo} con tu código.`}
+      />
+    ) : s && estado ? (
       <CabeceraPagina slot="cabecera" rotulo={`Seguimiento · ${s.codigo}`} titulo={`Hola, ${nombreCorto}`} entrada={estado.texto} />
     ) : (
       <CabeceraPagina
@@ -149,7 +166,7 @@ const titulo = s ? `${TIPOS_SOLICITUD[s.tipo]} ${s.codigo}` : 'Pedido no encontr
                   <li>
                     <time datetime={e.creadoEn}>{formatoFecha(e.creadoEn, true)}</time>
                     <strong>{tituloEvento(e, true)}</strong>
-                    {e.mensaje && e.tipo !== 'creada' && <p>{e.mensaje}</p>}
+                    {e.mensaje && e.tipo !== 'creada' && e.tipo !== 'aprobacion_cliente' && <p>{e.mensaje}</p>}
                   </li>
                 ))}
               </ol>

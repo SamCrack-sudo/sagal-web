@@ -149,7 +149,8 @@ export function nombreSeguro(nombre: string): string {
 
 // ── Consultas compartidas ───────────────────────────────────────────────
 async function leerPrecios(db: SupabaseClient): Promise<ConfigPrecios> {
-  const r = await db.from('configuracion').select('valor').eq('clave', 'precios').maybeSingle();
+  // Límite de tiempo: si la base de datos no responde, el cotizador no se queda esperando.
+  const r = await db.from('configuracion').select('valor').eq('clave', 'precios').abortSignal(AbortSignal.timeout(4000)).maybeSingle();
   if (r.error) {
     console.error('[precios]', r.error.message);
     return configPreciosInicial;
