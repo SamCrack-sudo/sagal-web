@@ -109,3 +109,47 @@ ${d.notaAdjuntos ? `<p style="margin:16px 0 0;font-size:14px;color:#3D4652">${es
     ),
   };
 }
+
+/** Correo al cliente cuando su solicitud cambia de estado o recibe la cotización final. */
+export function correoClienteActualizacion(d: {
+  nombre: string;
+  codigo: string;
+  estadoTitulo: string;
+  estadoTexto: string;
+  mensaje?: string | null;
+  precio?: string | null;
+  diasEntrega?: number | null;
+  enlacePago?: string | null;
+  enlaceSeguimiento: string;
+  puedeAprobar?: boolean;
+}) {
+  const titulo = `${d.codigo}: ${d.estadoTitulo}`;
+  const filas: Filas = [['Estado', d.estadoTitulo]];
+  if (d.precio) filas.push(['Valor', d.precio]);
+  if (d.diasEntrega) filas.push(['Entrega estimada', `${d.diasEntrega} días hábiles desde la aprobación`]);
+  const parrafos = [`Hola ${d.nombre},`, d.estadoTexto];
+  if (d.mensaje) parrafos.push(d.mensaje);
+  const cuerpo = `${parrafos.map((p) => `<p style="margin:0 0 12px;white-space:pre-wrap">${escapar(p)}</p>`).join('\n')}
+${tabla(filas)}
+<p style="margin:24px 0 0">${boton(d.puedeAprobar ? 'Revisar y aprobar la cotización' : 'Ver el estado de mi pedido', d.enlaceSeguimiento)}</p>
+${d.enlacePago ? `<p style="margin:12px 0 0">${boton('Pagar en línea', d.enlacePago, '#16325C', '#F2F5F9')}</p>` : ''}
+<p style="margin:24px 0 0;font-size:14px;color:#3D4652">Si tienes dudas, responde a este correo.</p>`;
+  return {
+    asunto: `${titulo} · ${marca.nombre}`,
+    html: marco(titulo, cuerpo),
+    texto: textoPlano(titulo, [...parrafos, `Seguimiento: ${d.enlaceSeguimiento}`, d.enlacePago ? `Pago: ${d.enlacePago}` : ''], filas),
+  };
+}
+
+/** Aviso al dueño cuando un cliente aprueba su cotización desde /pedido/[codigo]. */
+export function correoDuenoAprobacion(d: { codigo: string; nombre: string; precio: string | null; enlacePanel: string }) {
+  const titulo = `Cotización aprobada · ${d.codigo}`;
+  const filas: Filas = [
+    ['Cliente', d.nombre],
+    ['Valor', d.precio ?? 'Sin precio final'],
+  ];
+  const cuerpo = `<p style="margin:0 0 16px">${escapar(d.nombre)} aprobó la cotización. Ya puedes programarla y enviarle el enlace o los datos de pago.</p>
+${tabla(filas)}
+<p style="margin:24px 0 0">${boton('Abrir en el panel', d.enlacePanel)}</p>`;
+  return { asunto: titulo, html: marco(titulo, cuerpo), texto: textoPlano(titulo, [`Panel: ${d.enlacePanel}`], filas) };
+}

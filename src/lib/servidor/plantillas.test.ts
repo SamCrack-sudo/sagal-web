@@ -28,3 +28,25 @@ describe('plantillas de correo', () => {
     expect(aBase64(new TextEncoder().encode('hola'))).toBe('aG9sYQ==');
   });
 });
+
+describe('correos de seguimiento', () => {
+  it('invita a aprobar cuando la cotización está lista y escapa el mensaje', async () => {
+    const { correoClienteActualizacion } = await import('./plantillas');
+    const c = correoClienteActualizacion({
+      nombre: 'Ana',
+      codigo: 'SR-AAAAA-BBBBB',
+      estadoTitulo: 'Cotizada',
+      estadoTexto: 'Tu cotización está lista.',
+      mensaje: '<b>Incluye lijado</b>',
+      precio: '$ 35.000',
+      diasEntrega: 3,
+      enlacePago: 'https://pago.ejemplo/abc',
+      enlaceSeguimiento: 'https://sitio.co/pedido/SR-AAAAA-BBBBB',
+      puedeAprobar: true,
+    });
+    expect(c.html).toContain('Revisar y aprobar la cotización');
+    expect(c.html).toContain('https://pago.ejemplo/abc');
+    expect(c.html).not.toContain('<b>Incluye');
+    expect(c.texto).toContain('Seguimiento: https://sitio.co/pedido/SR-AAAAA-BBBBB');
+  });
+});

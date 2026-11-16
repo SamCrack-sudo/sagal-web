@@ -1,0 +1,372 @@
+---
+/**
+ * Seguimiento público de una solicitud o pedido. El código (no adivinable) es
+ * la llave: quien lo tiene ve el estado, el precio, el plazo y los mensajes
+ * del taller, y puede aprobar la cotización. No se muestran datos de contacto.
+ */
+import Base from '@/layouts/Base.astro';
+import CabeceraPagina from '@/components/CabeceraPagina.astro';
+import { marca } from '@/config/marca';
+import { repositorioPublico } from '@/lib/datos';
+import { esCodigoValido } from '@/lib/solicitudes/codigo';
+import { TIPOS_SOLICITUD } from '@/lib/solicitudes/tipos';
+import { ESTADO_PARA_CLIENTE, FLUJO, indiceFlujo, muestraPago } from '@/lib/gestion/estados';
+import { formatoFecha, resumenParametros, tituloEvento } from '@/lib/gestion/formato';
+import { formatoCOP } from '@/lib/precios/motor';
+import { avisarAprobacion } from '@/lib/servidor/notificaciones';
+
+export const prerender = false;
+
+const codigo = (Astro.params.codigo ?? '').toUpperCase();
+const repo = repositorioPublico();
+let mensajeAccion: string | null = null;
+
+if (Astro.request.method === 'POST' && esCodigoValido(codigo, marca.prefijo)) {
+  const datos = await Astro.request.formData();
+  if (datos.get('accion') === 'aprobar') {
+    const aprobado = await repo.aprobarPorCliente(codigo);
+    if (aprobado) {
+      await avisarAprobacion(aprobado, Astro.url.origin);
+      return Astro.redirect(`/pedido/${codigo}?aprobada=1`, 303);
+    }
+    mensajeAccion = 'Esta cotización ya no se puede aprobar desde aquí. Escríbenos si tienes dudas.';
+  }
+}
+
+const detalle = esCodigoValido(codigo, marca.prefijo) ? await repo.buscarPorCodigo(codigo) : null;
+if (!detalle) Astro.response.status = 404;
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+
+const config = await repo.leerPrecios();
+const s = detalle?.solicitud;
+const estado = s ? ESTADO_PARA_CLIENTE[s.estado] : null;
+const actual = s ? indiceFlujo(s.estado) : -1;
+const precio = s ? (s.precioFinal ?? s.precioEstimado) : null;
+const precioEsFinal = s?.precioFinal !== null && s?.precioFinal !== undefined;
+const puedeAprobar = s?.estado === 'cotizado' && precioEsFinal;
+const verPago = s ? muestraPago(s.estado) && s.estado !== 'cotizado' : false;
+const historial = detalle?.eventos.filter((e) => e.visibleCliente).reverse() ?? [];
+const nombreCorto = detalle?.cliente.nombre.split(' ')[0] ?? '';
+const aprobadaAhora = Astro.url.searchParams.get('aprobada') === '1';
+const resumen = s ? resumenParametros(s, config) : [];
+const titulo = s ? `${TIPOS_SOLICITUD[s.tipo]} ${s.codigo}` : 'Pedido no encontrado';
+---
+
+<Base
+  titulo={titulo}
+  descripcion="Seguimiento de tu solicitud o pedido."
+  noIndexar
+  pagina="seguimiento"
+  mensajeWhatsApp={`Hola ${marca.nombre}, consulto por mi solicitud ${codigo}.`}
+>
+  {
+    s && estado ? (
+      <CabeceraPagina slot="cabecera" rotulo={`Seguimiento · ${s.codigo}`} titulo={`Hola, ${nombreCorto}`} entrada={estado.texto} />
+    ) : (
+      <CabeceraPagina
+        slot="cabecera"
+        rotulo="Seguimiento"
+        titulo="No encontramos ese pedido"
+        entrada="Revisa que el código esté completo (por ejemplo SR-7KQ4M-9XDTA). Lo encuentras en el correo que te enviamos."
+      />
+    )
+  }
+
+  {
+    s && estado && detalle && (
+      <section class="seccion seguimiento">
+        <div class="contenedor seguimiento__rejilla">
+          <div class="seguimiento__principal">
+            {aprobadaAhora && (
+              <p class="aviso aviso--ok" role="status">
+                <strong>¡Listo! Aprobaste la cotización.</strong> Te escribiremos con los datos de pago y la fecha de entrega.
+              </p>
+            )}
+            {mensajeAccion && <p class="aviso aviso--alerta">{mensajeAccion}</p>}
+
+            {s.estado === 'cancelado' ? (
+              <p class="aviso aviso--error">
+                <strong>Solicitud cancelada.</strong> Si crees que es un error, escríbenos a {marca.contacto.correo}.
+              </p>
+            ) : (
+              <ol class="pasos-seguimiento" aria-label="Avance del pedido">
+                {FLUJO.map((e, i) => (
+                  <li data-estado={i < actual ? 'hecho' : i === actual ? 'actual' : 'pendiente'} aria-current={i === actual ? 'step' : undefined}>
+                    <span class="pasos-seguimiento__marca" aria-hidden="true" />
+                    <span>{ESTADO_PARA_CLIENTE[e].titulo}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+
+            {puedeAprobar && (
+              <section class="marco aprobar" aria-labelledby="aprobar-titulo">
+                <h2 class="titulo-3" id="aprobar-titulo">
+                  Tu cotización está lista
+                </h2>
+                <p class="aprobar__precio cifra">{formatoCOP(s.precioFinal!)}</p>
+                {s.diasEntrega && <p>Entrega estimada: {s.diasEntrega} días hábiles desde la aprobación.</p>}
+                <form method="post">
+                  <input type="hidden" name="accion" value="aprobar" />
+                  <button type="submit" class="boton boton--primario">
+                    Aprobar la cotización
+                  </button>
+                </form>
+                <p class="secundario">
+                  Al aprobar aceptas los <a class="enlace" href="/terminos">términos y condiciones</a>. Si quieres cambiar algo,{' '}
+                  <a class="enlace" href={`mailto:${marca.contacto.correo}?subject=${encodeURIComponent(s.codigo)}`}>
+                    escríbenos
+                  </a>{' '}
+                  antes de aprobar.
+                </p>
+              </section>
+            )}
+
+            {verPago && (
+              <section class="marco" aria-labelledby="pago-titulo">
+                <h2 class="titulo-4" id="pago-titulo">
+                  Pago
+                </h2>
+                {s.enlacePago ? (
+                  <p>
+                    <a class="boton boton--azul" href={s.enlacePago} rel="noopener" target="_blank">
+                      Pagar en línea
+                    </a>
+                  </p>
+                ) : (
+                  <p class="seguimiento__pago">{marca.pagos.instruccionesTransferencia}</p>
+                )}
+              </section>
+            )}
+
+            <section aria-labelledby="historial-titulo">
+              <h2 class="titulo-4" id="historial-titulo">
+                Historial
+              </h2>
+              <ol class="historial">
+                {historial.map((e) => (
+                  <li>
+                    <time datetime={e.creadoEn}>{formatoFecha(e.creadoEn, true)}</time>
+                    <strong>{tituloEvento(e, true)}</strong>
+                    {e.mensaje && e.tipo !== 'creada' && <p>{e.mensaje}</p>}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          </div>
+
+          <aside class="marco seguimiento__lateral" aria-labelledby="resumen-titulo">
+            <h2 class="titulo-4" id="resumen-titulo">
+              Resumen
+            </h2>
+            <dl class="especificaciones">
+              <dt>Código</dt>
+              <dd>{s.codigo}</dd>
+              <dt>Tipo</dt>
+              <dd>{TIPOS_SOLICITUD[s.tipo]}</dd>
+              <dt>Fecha</dt>
+              <dd>{formatoFecha(s.creadoEn)}</dd>
+              {precio !== null && (
+                <>
+                  <dt>{precioEsFinal ? 'Valor' : 'Valor estimado'}</dt>
+                  <dd>{formatoCOP(precio)}</dd>
+                </>
+              )}
+              {s.diasEntrega !== null && (
+                <>
+                  <dt>Entrega estimada</dt>
+                  <dd>{s.diasEntrega} días hábiles</dd>
+                </>
+              )}
+              {resumen.map(([k, v]) => (
+                <>
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </>
+              ))}
+              {detalle.archivos.length > 0 && (
+                <>
+                  <dt>Archivos</dt>
+                  <dd>{detalle.archivos.map((a) => a.nombre).join(', ')}</dd>
+                </>
+              )}
+            </dl>
+            {!precioEsFinal && precio !== null && (
+              <p class="secundario">Precio estimado; lo confirmamos al revisar tu archivo.</p>
+            )}
+          </aside>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    !detalle && (
+      <section class="seccion">
+        <div class="contenedor">
+          <a href="/" class="boton boton--contorno">
+            Volver al inicio
+          </a>
+        </div>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  .seguimiento__rejilla {
+    display: grid;
+    gap: var(--e-7);
+    align-items: start;
+  }
+
+  @media (min-width: 960px) {
+    .seguimiento__rejilla {
+      grid-template-columns: minmax(0, 1fr) 380px;
+    }
+    .seguimiento__lateral {
+      position: sticky;
+      top: 24px;
+    }
+  }
+
+  .seguimiento__principal {
+    display: grid;
+    gap: var(--e-6);
+    min-width: 0;
+  }
+
+  .seguimiento__lateral {
+    display: grid;
+    gap: 16px;
+  }
+
+  .seguimiento__lateral dd {
+    overflow-wrap: anywhere;
+  }
+
+  .pasos-seguimiento {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+  }
+
+  .pasos-seguimiento li {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 44px;
+    padding-left: 2px;
+    color: var(--c-texto-3);
+  }
+
+  .pasos-seguimiento li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 30px;
+    bottom: -14px;
+    border-left: 2px solid var(--c-linea);
+  }
+
+  .pasos-seguimiento__marca {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--c-linea-fuerte);
+    background: var(--c-fondo);
+    transform: rotate(45deg);
+  }
+
+  .pasos-seguimiento li[data-estado='hecho'] {
+    color: var(--c-texto-2);
+  }
+
+  .pasos-seguimiento li[data-estado='hecho'] .pasos-seguimiento__marca {
+    border-color: var(--c-azul);
+    background: var(--c-azul);
+  }
+
+  .pasos-seguimiento li[data-estado='hecho']::after {
+    border-color: var(--c-azul);
+  }
+
+  .pasos-seguimiento li[data-estado='actual'] {
+    color: var(--c-texto-fuerte);
+    font-weight: 700;
+  }
+
+  .pasos-seguimiento li[data-estado='actual'] .pasos-seguimiento__marca {
+    border-color: var(--c-azul);
+    background: var(--c-acento);
+  }
+
+  @media (min-width: 720px) {
+    .pasos-seguimiento {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+    .pasos-seguimiento li {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: var(--f-pequeno);
+    }
+    .pasos-seguimiento li:not(:last-child)::after {
+      left: 26px;
+      right: 4px;
+      top: 9px;
+      bottom: auto;
+      border-left: 0;
+      border-top: 2px solid var(--c-linea);
+    }
+    .pasos-seguimiento li[data-estado='hecho']::after {
+      border-color: var(--c-azul);
+    }
+  }
+
+  .aprobar {
+    display: grid;
+    gap: 14px;
+    border-top: 3px solid var(--c-acento);
+  }
+
+  .aprobar__precio {
+    font-size: 2.25rem;
+    font-weight: 750;
+    font-stretch: 112%;
+    line-height: 1;
+    color: var(--c-texto-fuerte);
+  }
+
+  .seguimiento__pago {
+    white-space: pre-wrap;
+  }
+
+  .historial {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    border-top: 1px solid var(--c-linea);
+  }
+
+  .historial li {
+    display: grid;
+    gap: 2px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--c-linea);
+  }
+
+  .historial time {
+    font-size: var(--f-mini);
+    color: var(--c-texto-3);
+  }
+
+  .historial p {
+    color: var(--c-texto-2);
+    white-space: pre-wrap;
+  }
+</style>

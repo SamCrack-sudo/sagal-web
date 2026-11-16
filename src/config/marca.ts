@@ -65,6 +65,11 @@ export const marca = {
     fechaActualizacion: '[FECHA DE PUBLICACIÓN]',
   },
 
+  pagos: {
+    /** Se muestran en /pedido/[codigo] cuando el pedido no tiene enlace de pago. */
+    instruccionesTransferencia: '[CONFIGURAR: banco, tipo y número de cuenta, titular y a dónde enviar el comprobante]',
+  },
+
   equipos: {
     impresora: 'Bambu Lab P2S',
     sistemaColor: 'AMS 2 Pro',
