@@ -1,0 +1,9 @@
+---
+import { ETIQUETA_ESTADO, type Estado } from '@/lib/gestion/estados';
+interface Props {
+  estado: Estado;
+}
+const { estado } = Astro.props;
+---
+
+<span class={`etiqueta estado--${estado}`}>{ETIQUETA_ESTADO[estado]}</span>

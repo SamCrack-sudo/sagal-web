@@ -1,0 +1,104 @@
+---
+/** Iconos de línea del diseño de referencia (trazo azul, 48 × 48). */
+interface Props {
+  nombre: 'cad' | 'impresion' | 'robotica' | 'electronica' | 'empresa' | 'catalogo' | 'educacion' | 'repuesto';
+  tamano?: number;
+}
+const { nombre, tamano = 48 } = Astro.props;
+---
+
+<svg
+  class="icono"
+  width={tamano}
+  height={tamano}
+  viewBox="0 0 48 48"
+  aria-hidden="true"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  {
+    nombre === 'cad' && (
+      <>
+        <path d="M24 6L40 15V33L24 42L8 33V15Z" />
+        <path d="M8 15L24 24L40 15" />
+        <path d="M24 24V42" />
+      </>
+    )
+  }
+  {
+    nombre === 'impresion' && (
+      <>
+        <path d="M6 6H42" />
+        <path d="M20 6V12L24 17L28 12V6" />
+        <path d="M18 25H30" />
+        <path d="M16 30H32" />
+        <path d="M14 35H34" />
+        <path d="M12 40H36" />
+      </>
+    )
+  }
+  {
+    nombre === 'robotica' && (
+      <>
+        <path d="M8 42H24" />
+        <path d="M16 42V36" />
+        <circle cx="16" cy="33" r="3" />
+        <path d="M18 31L28 19" />
+        <circle cx="30" cy="17" r="3" />
+        <path d="M33 17H40" />
+        <path d="M40 12V22" />
+        <path d="M40 12H44" />
+        <path d="M40 22H44" />
+      </>
+    )
+  }
+  {
+    nombre === 'electronica' && (
+      <>
+        <rect x="14" y="14" width="20" height="20" rx="1" />
+        <path d="M20 8V14M28 8V14M20 34V40M28 34V40M8 20H14M8 28H14M34 20H40M34 28H40" />
+        <circle cx="20" cy="20" r="1.5" />
+      </>
+    )
+  }
+  {
+    nombre === 'empresa' && (
+      <>
+        <path d="M6 42H42" />
+        <path d="M9 42V22L19 16V22L29 16V22L39 16V42" />
+        <path d="M15 30H19M25 30H29M15 36H19M25 36H29M33 30H35M33 36H35" />
+        <path d="M33 16V8H37V18" />
+      </>
+    )
+  }
+  {
+    nombre === 'repuesto' && (
+      <>
+        <circle cx="24" cy="24" r="7" />
+        <path d="M24 5V11M24 37V43M5 24H11M37 24H43M10.6 10.6L14.8 14.8M33.2 33.2L37.4 37.4M10.6 37.4L14.8 33.2M33.2 14.8L37.4 10.6" />
+      </>
+    )
+  }
+  {
+    nombre === 'catalogo' && (
+      <>
+        <rect x="8" y="8" width="13" height="13" />
+        <rect x="27" y="8" width="13" height="13" />
+        <rect x="8" y="27" width="13" height="13" />
+        <rect x="27" y="27" width="13" height="13" />
+      </>
+    )
+  }
+  {
+    nombre === 'educacion' && (
+      <>
+        <path d="M4 18L24 9L44 18L24 27Z" />
+        <path d="M12 22V32C16 36 32 36 36 32V22" />
+        <path d="M44 18V30" />
+      </>
+    )
+  }
+</svg>

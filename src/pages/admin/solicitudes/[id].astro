@@ -1,0 +1,422 @@
+---
+/**
+ * Ficha de una solicitud: datos, archivos, desglose, historial y acciones.
+ * Cada acción es un formulario POST que redirige a esta misma página (PRG).
+ */
+import Admin from '@/layouts/Admin.astro';
+import EtiquetaEstado from '@/components/admin/EtiquetaEstado.astro';
+import { ESTADOS, ETIQUETA_ESTADO, esEstado, siguienteEstado } from '@/lib/gestion/estados';
+import { formatoFecha, resumenParametros, tituloEvento } from '@/lib/gestion/formato';
+import { canalDeOrigen } from '@/lib/gestion/metricas';
+import { TIPOS_CLIENTE, TIPOS_SOLICITUD } from '@/lib/solicitudes/tipos';
+import { normalizarTelefono } from '@/lib/solicitudes/validacion';
+import { enlaceWhatsApp, marca } from '@/config/marca';
+import { formatoCOP, formatoNumero } from '@/lib/precios/motor';
+import { avisarCliente } from '@/lib/servidor/notificaciones';
+
+export const prerender = false;
+
+const repo = Astro.locals.repoAdmin!;
+const autor = Astro.locals.admin!.correo;
+const id = Astro.params.id ?? '';
+
+// ── Acciones ──────────────────────────────────────────────────────────
+let error = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const accion = String(f.get('accion') ?? '');
+  const mensaje = String(f.get('mensaje') ?? '').trim().slice(0, 2000) || null;
+  const notificar = f.get('notificar') === 'on';
+  const actual = await repo.detalle(id);
+  if (!actual) return new Response('No encontrada', { status: 404 });
+  let cambio: string | null = null;
+
+  if (accion === 'estado') {
+    const nuevo = f.get('estado');
+    if (!esEstado(nuevo)) error = 'Elige un estado válido.';
+    else if (nuevo === actual.solicitud.estado && !mensaje) error = 'La solicitud ya está en ese estado.';
+    else {
+      await repo.actualizarSolicitud(
+        id,
+        { estado: nuevo },
+        { tipo: 'estado', estadoAnterior: actual.solicitud.estado, estadoNuevo: nuevo, mensaje, visibleCliente: true, autor },
+      );
+      cambio = 'estado';
+    }
+  } else if (accion === 'cotizar') {
+    const precio = Number(String(f.get('precio') ?? '').replace(/[^\d]/g, ''));
+    const diasTxt = String(f.get('dias') ?? '').trim();
+    const dias = diasTxt ? Number(diasTxt) : null;
+    const enlace = String(f.get('enlace') ?? '').trim() || null;
+    const pasar = f.get('pasar') === 'on';
+    if (!Number.isFinite(precio) || precio <= 0) error = 'Escribe el precio final en pesos, sin decimales.';
+    else if (dias !== null && (!Number.isInteger(dias) || dias < 0 || dias > 365)) error = 'Los días de entrega deben ser un número entero.';
+    else if (enlace && !/^https:\/\/\S+$/.test(enlace)) error = 'El enlace de pago debe empezar por https://';
+    else {
+      const nuevoEstado = pasar && actual.solicitud.estado === 'nuevo' ? 'cotizado' : undefined;
+      await repo.actualizarSolicitud(
+        id,
+        { precioFinal: precio, diasEntrega: dias, enlacePago: enlace, ...(nuevoEstado ? { estado: nuevoEstado } : {}) },
+        nuevoEstado
+          ? { tipo: 'estado', estadoAnterior: 'nuevo', estadoNuevo: 'cotizado', mensaje, visibleCliente: true, autor, detalle: { precioFinal: precio, diasEntrega: dias } }
+          : { tipo: 'precio', mensaje, visibleCliente: true, autor, detalle: { precioFinal: precio, diasEntrega: dias, enlacePago: enlace } },
+      );
+      cambio = 'cotizacion';
+    }
+  } else if (accion === 'nota') {
+    if (!mensaje) error = 'Escribe la nota.';
+    else {
+      const visible = f.get('visible') === 'on';
+      await repo.agregarEvento(id, { tipo: 'nota', mensaje, visibleCliente: visible, autor });
+      cambio = visible ? 'mensaje' : 'nota';
+    }
+  } else error = 'Acción desconocida.';
+
+  if (!error && cambio) {
+    let aviso = '';
+    if (notificar && cambio !== 'nota') {
+      const despues = (await repo.detalle(id))!;
+      const r = await avisarCliente(despues, { sitio: Astro.url.origin, mensaje });
+      if (r.enviado) {
+        await repo.agregarEvento(id, { tipo: 'notificacion', mensaje: `Correo enviado a ${despues.cliente.correo}.`, autor });
+        aviso = '&aviso=enviado';
+      } else aviso = `&aviso=${encodeURIComponent(r.motivo ?? 'no-enviado')}`;
+    }
+    return Astro.redirect(`/admin/solicitudes/${id}?ok=${cambio}${aviso}`, 303);
+  }
+}
+
+const detalle = await repo.detalle(id);
+if (!detalle) {
+  Astro.response.status = 404;
+}
+const config = await repo.leerPrecios();
+const s = detalle?.solicitud;
+const c = detalle?.cliente;
+const ok = Astro.url.searchParams.get('ok');
+const aviso = Astro.url.searchParams.get('aviso');
+const MENSAJES_OK: Record<string, string> = {
+  estado: 'Estado actualizado.',
+  cotizacion: 'Cotización final guardada.',
+  nota: 'Nota interna guardada.',
+  mensaje: 'Mensaje publicado en la página de seguimiento.',
+};
+
+const ETIQUETAS_DATOS: Record<string, string> = {
+  medidas: 'Medidas',
+  uso: 'Uso o ambiente',
+  cantidad: 'Cantidad',
+  servicio: 'Servicio',
+  sector: 'Sector',
+  tipoPieza: 'Tipo de pieza',
+  urgencia: 'Urgencia',
+  archivo: 'Archivo',
+  unidad: 'Unidades del archivo',
+  alertas: 'Alertas',
+  paquete: 'Paquete estimado por el cliente',
+  fabricar: '¿También fabricar?',
+};
+const datos = s
+  ? Object.entries(s.datos)
+      .filter(([k, v]) => k in ETIQUETAS_DATOS && v !== undefined && v !== null && v !== '' && !(Array.isArray(v) && v.length === 0))
+      .map(([k, v]) => [ETIQUETAS_DATOS[k]!, Array.isArray(v) ? v.join(' ') : typeof v === 'boolean' ? (v ? 'Sí' : 'No') : String(v)] as const)
+  : [];
+
+type Desglose = { pedido?: Record<string, number> };
+const pedido = (s?.desglose as Desglose | null)?.pedido;
+const filasDesglose: [string, string][] = pedido
+  ? [
+      ['Material', formatoCOP(pedido.costoMaterial ?? 0)],
+      ['Máquina', formatoCOP(pedido.costoMaquina ?? 0)],
+      ['Preparación', formatoCOP(pedido.costoPreparacion ?? 0)],
+      ['Posprocesado', formatoCOP(pedido.costoPosprocesado ?? 0)],
+      ['Cambios de color', formatoCOP(pedido.costoColor ?? 0)],
+      ['Costo total', formatoCOP(pedido.costo ?? 0)],
+      ['Con margen', formatoCOP(pedido.conMargen ?? 0)],
+      ['Base (mín. aplicado)', `${formatoCOP(pedido.base ?? 0)}${pedido.aplicaMinimo ? ' · mínimo' : ''}`],
+      ['Descuento', `${formatoNumero((pedido.descuento ?? 0) * 100)} %`],
+      ['Urgencia', `${formatoNumero((pedido.recargoUrgencia ?? 0) * 100)} %`],
+      ['IVA', formatoCOP(pedido.iva ?? 0)],
+      ['Total estimado', formatoCOP(pedido.total ?? 0)],
+      ['Gramos', `${formatoNumero(pedido.gramos ?? 0)} g`],
+      ['Horas de máquina', `${formatoNumero(pedido.horas ?? 0, 1)} h`],
+    ]
+  : [];
+
+const telefono = c?.telefono ? normalizarTelefono(c.telefono) : '';
+const whatsapp = s && c && telefono ? enlaceWhatsApp(`Hola ${c.nombre}, te escribo de ${marca.nombre} por tu solicitud ${s.codigo}.`, telefono) : null;
+const sugerido = s ? (siguienteEstado(s.estado) ?? s.estado) : 'nuevo';
+---
+
+<Admin titulo={s ? s.codigo : 'No encontrada'} seccion="solicitudes">
+  {
+    !s || !c || !detalle ? (
+      <>
+        <div class="admin-cabecera">
+          <h1>Solicitud no encontrada</h1>
+        </div>
+        <a class="boton boton--contorno" href="/admin/solicitudes">
+          Volver a solicitudes
+        </a>
+      </>
+    ) : (
+      <>
+        <a class="enlace" href="/admin/solicitudes">
+          ← Solicitudes
+        </a>
+        <div class="admin-cabecera">
+          <div>
+            <h1>{s.codigo}</h1>
+            <p>
+              {TIPOS_SOLICITUD[s.tipo]} · {formatoFecha(s.creadoEn, true)}
+            </p>
+          </div>
+          <EtiquetaEstado estado={s.estado} />
+        </div>
+
+        {ok && MENSAJES_OK[ok] && (
+          <p class="aviso aviso--ok" role="status">
+            <strong>{MENSAJES_OK[ok]}</strong>
+            {aviso === 'enviado' && <span>Se avisó al cliente por correo.</span>}
+            {aviso && aviso !== 'enviado' && <span>No se envió el correo: {aviso}</span>}
+          </p>
+        )}
+        {error && (
+          <p class="aviso aviso--error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <div class="grupo-botones">
+          <a class="boton boton--contorno boton--chico" href={`/pedido/${s.codigo}`} target="_blank" rel="noopener">
+            Ver como el cliente ↗
+          </a>
+          {whatsapp && (
+            <a class="boton boton--contorno boton--chico" href={whatsapp} target="_blank" rel="noopener">
+              WhatsApp
+            </a>
+          )}
+          <a class="boton boton--contorno boton--chico" href={`mailto:${c.correo}?subject=${encodeURIComponent(`${marca.nombre} · ${s.codigo}`)}`}>
+            Correo
+          </a>
+        </div>
+
+        <div class="detalle">
+          <div class="detalle__columna">
+            <section class="panel" aria-labelledby="sol-titulo">
+              <h2 id="sol-titulo">Solicitud</h2>
+              {s.descripcion && <p style="white-space:pre-wrap">{s.descripcion}</p>}
+              <dl class="especificaciones">
+                {resumenParametros(s, config).map(([k, v]) => (
+                  <>
+                    <dt>{k}</dt>
+                    <dd>{v}</dd>
+                  </>
+                ))}
+                {datos.map(([k, v]) => (
+                  <>
+                    <dt>{k}</dt>
+                    <dd>{v}</dd>
+                  </>
+                ))}
+                <dt>Precio estimado</dt>
+                <dd>{s.precioEstimado === null ? '—' : formatoCOP(s.precioEstimado)}</dd>
+                <dt>Precio final</dt>
+                <dd>{s.precioFinal === null ? '—' : formatoCOP(s.precioFinal)}</dd>
+                <dt>Entrega</dt>
+                <dd>{s.diasEntrega === null ? '—' : `${s.diasEntrega} días hábiles`}</dd>
+                <dt>Origen</dt>
+                <dd>{canalDeOrigen(s.origen)}</dd>
+              </dl>
+            </section>
+
+            <section class="panel" aria-labelledby="arch-titulo">
+              <h2 id="arch-titulo">Archivos ({detalle.archivos.length})</h2>
+              {detalle.archivos.length === 0 ? (
+                <p class="secundario">Sin archivos.</p>
+              ) : (
+                <ul class="lista-archivos">
+                  {detalle.archivos.map((a) => (
+                    <li>
+                      <span>
+                        {a.nombre}
+                        {a.tamano ? ` · ${formatoNumero(a.tamano / 1024 / 1024, 1)} MB` : ''}
+                      </span>
+                      <a class="boton boton--contorno boton--chico" href={`/admin/archivos/${a.id}`}>
+                        Descargar
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            {filasDesglose.length > 0 && (
+              <details class="panel">
+                <summary>
+                  <strong>Desglose de costos (cotizador)</strong>
+                </summary>
+                <dl class="especificaciones">
+                  {filasDesglose.map(([k, v]) => (
+                    <>
+                      <dt>{k}</dt>
+                      <dd>{v}</dd>
+                    </>
+                  ))}
+                </dl>
+              </details>
+            )}
+
+            <section class="panel" aria-labelledby="hist-titulo">
+              <h2 id="hist-titulo">Historial</h2>
+              <ol class="linea-tiempo">
+                {[...detalle.eventos].reverse().map((e) => (
+                  <li data-visible={e.visibleCliente ? 'si' : 'no'}>
+                    <time datetime={e.creadoEn}>{formatoFecha(e.creadoEn, true)}</time>
+                    <strong>{tituloEvento(e)}</strong>
+                    {e.mensaje && <p>{e.mensaje}</p>}
+                    <span class="linea-tiempo__autor">
+                      {e.autor} · {e.visibleCliente ? 'visible para el cliente' : 'solo interno'}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          </div>
+
+          <div class="detalle__columna">
+            <section class="panel" aria-labelledby="cli-titulo">
+              <h2 id="cli-titulo">Cliente</h2>
+              <dl class="especificaciones">
+                <dt>Nombre</dt>
+                <dd>
+                  <a class="enlace" href={`/admin/clientes/${c.id}`}>
+                    {c.nombre}
+                  </a>
+                </dd>
+                <dt>Correo</dt>
+                <dd>{c.correo}</dd>
+                <dt>Teléfono</dt>
+                <dd>{c.telefono ?? '—'}</dd>
+                <dt>Tipo</dt>
+                <dd>{TIPOS_CLIENTE[c.tipo]}</dd>
+                {c.empresa && (
+                  <>
+                    <dt>Empresa</dt>
+                    <dd>{c.empresa}</dd>
+                  </>
+                )}
+                {c.nit && (
+                  <>
+                    <dt>NIT</dt>
+                    <dd>{c.nit}</dd>
+                  </>
+                )}
+              </dl>
+            </section>
+
+            <form method="post" class="panel" aria-labelledby="cot-titulo">
+              <h2 id="cot-titulo">Cotización final</h2>
+              <input type="hidden" name="accion" value="cotizar" />
+              <div class="campo">
+                <label class="campo__etiqueta" for="precio">
+                  Precio final (COP)
+                </label>
+                <input
+                  id="precio"
+                  name="precio"
+                  class="control"
+                  inputmode="numeric"
+                  required
+                  value={s.precioFinal ?? s.precioEstimado ?? ''}
+                  placeholder="Ej.: 35000"
+                />
+              </div>
+              <div class="campo">
+                <label class="campo__etiqueta" for="dias">
+                  Entrega (días hábiles) <span class="campo__opcional">(opcional)</span>
+                </label>
+                <input id="dias" name="dias" class="control" inputmode="numeric" value={s.diasEntrega ?? ''} />
+              </div>
+              <div class="campo">
+                <label class="campo__etiqueta" for="enlace">
+                  Enlace de pago <span class="campo__opcional">(opcional)</span>
+                </label>
+                <input id="enlace" name="enlace" class="control" type="url" placeholder="https://" value={s.enlacePago ?? ''} />
+                <span class="campo__ayuda">Si lo dejas vacío, el cliente ve las instrucciones de transferencia.</span>
+              </div>
+              <div class="campo">
+                <label class="campo__etiqueta" for="msg-cot">
+                  Mensaje para el cliente <span class="campo__opcional">(opcional)</span>
+                </label>
+                <textarea id="msg-cot" name="mensaje" class="control" rows="3" placeholder="Qué incluye, cambios respecto al estimado…" />
+              </div>
+              {s.estado === 'nuevo' && (
+                <label class="casilla">
+                  <input type="checkbox" name="pasar" checked />
+                  <span>Pasar a «Cotizado» (el cliente podrá aprobarla)</span>
+                </label>
+              )}
+              <label class="casilla">
+                <input type="checkbox" name="notificar" checked />
+                <span>Avisar al cliente por correo</span>
+              </label>
+              <button type="submit" class="boton boton--primario">
+                Guardar cotización
+              </button>
+            </form>
+
+            <form method="post" class="panel" aria-labelledby="est-titulo">
+              <h2 id="est-titulo">Cambiar estado</h2>
+              <input type="hidden" name="accion" value="estado" />
+              <div class="campo">
+                <label class="campo__etiqueta" for="estado">
+                  Nuevo estado
+                </label>
+                <select id="estado" name="estado" class="control">
+                  {ESTADOS.map((e) => (
+                    <option value={e} selected={e === sugerido}>
+                      {ETIQUETA_ESTADO[e]}
+                      {e === s.estado ? ' (actual)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div class="campo">
+                <label class="campo__etiqueta" for="msg-est">
+                  Mensaje para el cliente <span class="campo__opcional">(opcional)</span>
+                </label>
+                <textarea id="msg-est" name="mensaje" class="control" rows="3" />
+              </div>
+              <label class="casilla">
+                <input type="checkbox" name="notificar" checked />
+                <span>Avisar al cliente por correo</span>
+              </label>
+              <button type="submit" class="boton boton--azul">
+                Cambiar estado
+              </button>
+            </form>
+
+            <form method="post" class="panel" aria-labelledby="nota-titulo">
+              <h2 id="nota-titulo">Nota</h2>
+              <input type="hidden" name="accion" value="nota" />
+              <div class="campo">
+                <label class="campo__etiqueta" for="nota">
+                  Texto
+                </label>
+                <textarea id="nota" name="mensaje" class="control" rows="3" required />
+              </div>
+              <label class="casilla">
+                <input type="checkbox" name="visible" />
+                <span>Mostrarla al cliente en su página de seguimiento</span>
+              </label>
+              <button type="submit" class="boton boton--contorno">
+                Guardar nota
+              </button>
+            </form>
+          </div>
+        </div>
+      </>
+    )
+  }
+</Admin>

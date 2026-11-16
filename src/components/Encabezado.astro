@@ -1,0 +1,367 @@
+---
+/**
+ * Encabezado azul con el marco de plano técnico del diseño de referencia.
+ * El contenido del slot (p. ej. el héroe de la portada) se dibuja dentro del marco.
+ */
+import Logo from './Logo.astro';
+import { servicios, navegacionPrincipal } from '@/config/navegacion';
+
+const ruta = Astro.url.pathname.replace(/\/$/, '') || '/';
+const actual = (href: string) => (ruta === href ? 'page' : undefined);
+const enServicios = ruta.startsWith('/servicios');
+---
+
+<header class="cabecera">
+  <div class="cabecera__marco">
+    <nav class="nav" aria-label="Principal">
+      <a href="/" class="nav__marca" aria-label="Inicio">
+        <Logo />
+      </a>
+
+      <button
+        type="button"
+        class="nav__alternar"
+        aria-expanded="false"
+        aria-controls="menu-principal"
+        data-desplegable
+      >
+        <span class="nav__hamburguesa" aria-hidden="true"></span>
+        <span>Menú</span>
+      </button>
+
+      <div class="nav__menu" id="menu-principal" data-menu>
+        <ul class="nav__lista">
+          <li class="nav__grupo">
+            <button
+              type="button"
+              class="nav__enlace nav__boton-sub"
+              aria-expanded="false"
+              aria-controls="menu-servicios"
+              data-desplegable
+              data-activo={enServicios ? 'true' : undefined}
+            >
+              Servicios
+              <svg width="12" height="8" viewBox="0 0 12 8" aria-hidden="true">
+                <path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+              </svg>
+            </button>
+            <ul class="nav__sub" id="menu-servicios" data-menu>
+              {
+                servicios.map((s) => (
+                  <li>
+                    <a href={s.href} aria-current={actual(s.href)}>
+                      <strong>{s.etiqueta}</strong>
+                      <span>{s.descripcion}</span>
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </li>
+          {
+            navegacionPrincipal.map((e) => (
+              <li>
+                <a href={e.href} class="nav__enlace" aria-current={actual(e.href)}>
+                  {e.etiqueta}
+                </a>
+              </li>
+            ))
+          }
+          <li>
+            <a href="/cotizar" class="boton boton--primario nav__cta" data-evento="clic_cta_cotizar" data-origen="menu">
+              Cotizar
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <slot />
+  </div>
+</header>
+
+<script>
+  // Menús desplegables accesibles (patrón "disclosure"): botón con aria-expanded
+  // que controla un elemento por id. Escape cierra; clic fuera cierra.
+  const botones = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-desplegable]'));
+
+  function cerrar(boton: HTMLButtonElement, devolverFoco = false) {
+    boton.setAttribute('aria-expanded', 'false');
+    if (devolverFoco) boton.focus();
+  }
+
+  for (const boton of botones) {
+    boton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const abierto = boton.getAttribute('aria-expanded') === 'true';
+      boton.setAttribute('aria-expanded', String(!abierto));
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    for (const boton of botones) {
+      if (boton.getAttribute('aria-expanded') === 'true') {
+        const menu = document.getElementById(boton.getAttribute('aria-controls') ?? '');
+        cerrar(boton, Boolean(menu?.contains(document.activeElement)));
+      }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    for (const boton of botones) {
+      const menu = document.getElementById(boton.getAttribute('aria-controls') ?? '');
+      if (menu && !menu.contains(e.target as Node)) cerrar(boton);
+    }
+  });
+</script>
+
+<style>
+  .cabecera {
+    background: var(--c-azul);
+    color: var(--c-sobre-azul);
+    padding: clamp(10px, 2vw, 20px);
+    padding-bottom: 0;
+  }
+
+  .cabecera__marco {
+    max-width: var(--ancho-max-amplio);
+    margin: 0 auto;
+    border: 1px solid var(--c-linea-azul);
+    border-bottom: 0;
+    padding: 0 clamp(16px, 4vw, 48px);
+  }
+
+  .nav {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 32px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--c-linea-azul);
+  }
+
+  @media (max-width: 959px) {
+    .nav {
+      gap: 12px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .nav__marca :global(.logo__texto) {
+      font-size: 17px;
+    }
+    .nav__marca :global(.logo) {
+      gap: 9px;
+    }
+    .nav__marca :global(svg) {
+      width: 28px;
+      height: 28px;
+    }
+    .nav .nav__alternar {
+      padding: 0 10px;
+      gap: 8px;
+    }
+  }
+
+  .nav__marca {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--objetivo-tactil);
+  }
+
+  .nav__marca:hover {
+    text-decoration: none;
+  }
+
+  .nav__alternar {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--objetivo-tactil);
+    padding: 0 14px;
+    border: 1px solid var(--c-linea-azul);
+    border-radius: var(--radio);
+    background: transparent;
+    color: var(--c-sobre-azul);
+    cursor: pointer;
+  }
+
+  .nav__hamburguesa,
+  .nav__hamburguesa::before,
+  .nav__hamburguesa::after {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: currentColor;
+    transition: transform var(--t-media) var(--curva);
+  }
+
+  .nav__hamburguesa {
+    position: relative;
+  }
+
+  .nav__hamburguesa::before,
+  .nav__hamburguesa::after {
+    content: '';
+    position: absolute;
+    left: 0;
+  }
+
+  .nav__hamburguesa::before {
+    top: -6px;
+  }
+
+  .nav__hamburguesa::after {
+    top: 6px;
+  }
+
+  .nav__alternar[aria-expanded='true'] .nav__hamburguesa {
+    background: transparent;
+  }
+
+  .nav__alternar[aria-expanded='true'] .nav__hamburguesa::before {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .nav__alternar[aria-expanded='true'] .nav__hamburguesa::after {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .nav__menu {
+    display: none;
+    flex-basis: 100%;
+  }
+
+  .nav__alternar[aria-expanded='true'] + .nav__menu {
+    display: block;
+  }
+
+  .nav__lista {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0 12px;
+    display: grid;
+    gap: 2px;
+  }
+
+  .nav__enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--objetivo-tactil);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #dce4ee;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .nav__enlace[aria-current='page'],
+  .nav__enlace[data-activo] {
+    color: var(--c-sobre-azul);
+    text-decoration: underline;
+    text-decoration-color: var(--c-acento);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+
+  .nav__boton-sub svg {
+    transition: transform var(--t-media) var(--curva);
+  }
+
+  .nav__boton-sub[aria-expanded='true'] svg {
+    transform: rotate(180deg);
+  }
+
+  .nav__sub {
+    display: none;
+    list-style: none;
+    margin: 0;
+    padding: 4px 0 8px 16px;
+    border-left: 1px solid var(--c-linea-azul);
+  }
+
+  .nav__boton-sub[aria-expanded='true'] + .nav__sub {
+    display: grid;
+    gap: 4px;
+  }
+
+  .nav__sub a {
+    display: grid;
+    gap: 2px;
+    padding: 8px 0;
+  }
+
+  .nav__sub a strong {
+    font-weight: 650;
+  }
+
+  .nav__sub a span {
+    font-size: var(--f-mini);
+    color: var(--c-sobre-azul-3);
+  }
+
+  .nav__sub a[aria-current='page'] strong {
+    text-decoration: underline;
+    text-decoration-color: var(--c-acento);
+    text-underline-offset: 4px;
+  }
+
+  .nav__cta {
+    margin-top: 8px;
+    min-height: var(--objetivo-tactil);
+    padding: 0 18px;
+    font-size: 1rem;
+  }
+
+  @media (min-width: 960px) {
+    .nav__alternar {
+      display: none;
+    }
+
+    .nav__menu,
+    .nav__alternar[aria-expanded='true'] + .nav__menu {
+      display: block;
+      flex-basis: auto;
+    }
+
+    .nav__lista {
+      display: flex;
+      align-items: center;
+      gap: 4px 28px;
+      padding: 0;
+    }
+
+    .nav__grupo {
+      position: relative;
+    }
+
+    .nav__sub {
+      position: absolute;
+      top: calc(100% + 14px);
+      left: -20px;
+      z-index: 20;
+      width: 340px;
+      padding: 8px;
+      border: 1px solid var(--c-linea-azul);
+      background: var(--c-azul-900);
+      box-shadow: 0 12px 32px rgba(6, 14, 28, 0.35);
+    }
+
+    .nav__sub a {
+      padding: 12px;
+    }
+
+    .nav__sub a:hover {
+      background: rgba(233, 238, 245, 0.06);
+      text-decoration: none;
+    }
+
+    .nav__cta {
+      margin-top: 0;
+    }
+  }
+</style>

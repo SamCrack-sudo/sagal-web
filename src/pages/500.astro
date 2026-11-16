@@ -1,0 +1,19 @@
+---
+/** Página de error del servidor (por ejemplo, si la base de datos no responde). */
+import Base from '@/layouts/Base.astro';
+import CabeceraPagina from '@/components/CabeceraPagina.astro';
+import { marca } from '@/config/marca';
+---
+
+<Base titulo="Algo salió mal" descripcion="Error temporal del servidor." noIndexar pagina="500">
+  <CabeceraPagina
+    slot="cabecera"
+    rotulo="Error"
+    titulo="Algo salió mal de nuestro lado"
+    entrada={`Es un problema temporal. Vuelve a intentarlo en unos minutos o escríbenos a ${marca.contacto.correo}.`}
+  >
+    <div class="grupo-botones">
+      <a href="/" class="boton boton--primario">Ir al inicio</a>
+    </div>
+  </CabeceraPagina>
+</Base>

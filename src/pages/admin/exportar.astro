@@ -1,0 +1,29 @@
+---
+import Admin from '@/layouts/Admin.astro';
+
+export const prerender = false;
+---
+
+<Admin titulo="Exportar" seccion="exportar">
+  <div class="admin-cabecera">
+    <div>
+      <h1>Exportar a CSV</h1>
+      <p>Archivos listos para abrir en Excel o Google Sheets (separados por punto y coma, con tildes).</p>
+    </div>
+  </div>
+  <div class="rejilla rejilla--2">
+    <section class="panel">
+      <h2>Solicitudes y pedidos</h2>
+      <p class="secundario">Código, fechas, estado, cliente, precios, entrega, pago y origen de cada solicitud.</p>
+      <a class="boton boton--primario" href="/api/admin/exportar/solicitudes.csv" download>Descargar solicitudes</a>
+    </section>
+    <section class="panel">
+      <h2>Clientes</h2>
+      <p class="secundario">Datos de contacto, tipo, número de solicitudes, total pagado y origen.</p>
+      <a class="boton boton--primario" href="/api/admin/exportar/clientes.csv" download>Descargar clientes</a>
+    </section>
+  </div>
+  <p class="aviso">
+    Los archivos contienen datos personales: guárdalos con cuidado y úsalos solo para los fines de la política de tratamiento de datos.
+  </p>
+</Admin>

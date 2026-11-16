@@ -1,0 +1,94 @@
+/*
+ * Tokens del sistema de diseño de SAGAL Robotics.
+ * Fuente de verdad visual: referencia/diseno.html (estética de plano técnico).
+ * Regla: el acento naranja NUNCA se usa como color de texto sobre fondo claro;
+ * solo como relleno, trazo o fondo (con texto oscuro encima).
+ */
+:root {
+  /* Color: marca */
+  --c-azul: #16325c;
+  --c-azul-900: #0e2342;
+  --c-azul-700: #1f4277;
+  --c-acento: #ff6a13;
+  --c-acento-hover: #ff7f33;
+
+  /* Color: texto */
+  --c-texto-fuerte: #10151c;
+  --c-texto: #1a1f26;
+  --c-texto-2: #3d4652;
+  --c-texto-3: #5c6675;
+
+  /* Color: fondos y líneas */
+  --c-fondo: #f7f8fa;
+  --c-fondo-2: #e9edf2;
+  --c-fondo-3: #e3e7ec;
+  --c-blanco: #ffffff;
+  --c-linea: #c9d0d9;
+  --c-linea-fuerte: #8e98a6;
+
+  /* Color: sobre azul */
+  --c-sobre-azul: #f2f5f9;
+  --c-sobre-azul-2: #c8d3e2;
+  --c-sobre-azul-3: #afc0d6;
+  --c-linea-azul: rgba(233, 238, 245, 0.3);
+  --c-plano: #e9eef5;
+  --c-campo-azul: rgba(6, 14, 28, 0.35);
+
+  /* Color: estados (texto oscuro sobre fondo pálido, contraste AA) */
+  --c-ok: #1d6b3a;
+  --c-ok-fondo: #e3f1e7;
+  --c-alerta: #7a4a00;
+  --c-alerta-fondo: #fdf0d9;
+  --c-error: #a3231b;
+  --c-error-fondo: #fbe5e3;
+  --c-info: #16325c;
+  --c-info-fondo: #e2e9f3;
+
+  /* Tipografía */
+  --f-familia: 'Archivo Variable', 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --f-cuerpo: 1.0625rem; /* 17 px */
+  --f-interlineado: 1.6;
+  --f-pequeno: 0.9375rem; /* 15 px */
+  --f-mini: 0.8125rem; /* 13 px */
+  --f-lead: 1.1875rem; /* 19 px */
+  --f-h1: clamp(2rem, 1rem + 4.2vw, 4.25rem);
+  --f-h2: clamp(2rem, 3.2vw, 2.75rem);
+  --f-h3: 1.375rem;
+  --f-ancho-titulo: 116%;
+  --f-ancho-h2: 112%;
+  --f-ancho-h3: 108%;
+  --f-ancho-plano: 84%; /* rótulos tipo plano técnico */
+  --f-peso-titulo: 750;
+  --f-peso-h3: 700;
+
+  /* Espaciado y medidas */
+  --e-1: 4px;
+  --e-2: 8px;
+  --e-3: 12px;
+  --e-4: 16px;
+  --e-5: 24px;
+  --e-6: 32px;
+  --e-7: 48px;
+  --e-8: 64px;
+  --e-seccion: clamp(72px, 9vw, 112px);
+  --ancho-max: 1200px;
+  --ancho-max-amplio: 1280px;
+  --ancho-texto: 38em;
+  --gutter: clamp(16px, 4vw, 24px);
+  --radio: 3px;
+  --objetivo-tactil: 44px;
+  --alto-campo: 48px;
+  --alto-boton: 52px;
+
+  /* Movimiento */
+  --t-rapida: 120ms;
+  --t-media: 220ms;
+  --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-rapida: 0ms;
+    --t-media: 0ms;
+  }
+}

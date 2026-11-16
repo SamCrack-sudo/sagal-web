@@ -1,0 +1,90 @@
+---
+import Admin from '@/layouts/Admin.astro';
+import { TIPOS_CLIENTE } from '@/lib/solicitudes/tipos';
+import { formatoFecha } from '@/lib/gestion/formato';
+import { formatoCOP } from '@/lib/precios/motor';
+
+export const prerender = false;
+
+const q = (Astro.url.searchParams.get('q') ?? '').slice(0, 80);
+const tipo = Astro.url.searchParams.get('tipo') ?? '';
+const todos = await Astro.locals.repoAdmin!.listarClientes(q);
+const clientes = tipo in TIPOS_CLIENTE ? todos.filter((c) => c.tipo === tipo) : todos;
+---
+
+<Admin titulo="Clientes" seccion="clientes">
+  <div class="admin-cabecera">
+    <div>
+      <h1>Clientes</h1>
+      <p>{clientes.length} cliente{clientes.length === 1 ? '' : 's'}</p>
+    </div>
+  </div>
+
+  <form class="filtros" method="get" role="search">
+    <div class="campo">
+      <label class="campo__etiqueta" for="q">Buscar</label>
+      <input id="q" name="q" class="control" value={q} placeholder="Nombre, correo, empresa o teléfono" />
+    </div>
+    <div class="campo">
+      <label class="campo__etiqueta" for="tipo">Tipo</label>
+      <select id="tipo" name="tipo" class="control">
+        <option value="">Todos</option>
+        {
+          Object.entries(TIPOS_CLIENTE).map(([k, v]) => (
+            <option value={k} selected={k === tipo}>
+              {v}
+            </option>
+          ))
+        }
+      </select>
+    </div>
+    <button type="submit" class="boton boton--azul">Filtrar</button>
+    {(q || tipo) && <a class="boton boton--texto" href="/admin/clientes">Limpiar</a>}
+  </form>
+
+  {
+    clientes.length === 0 ? (
+      <p class="aviso">No hay clientes con esos filtros.</p>
+    ) : (
+      <div class="tabla-envoltura">
+        <table class="tabla tabla--tarjetas">
+          <caption class="sr-only">Clientes</caption>
+          <thead>
+            <tr>
+              <th scope="col">Cliente</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Contacto</th>
+              <th scope="col" class="num">Solicitudes</th>
+              <th scope="col">Última</th>
+              <th scope="col" class="num">Pagado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {clientes.map((c) => (
+              <tr>
+                <td>
+                  <a class="enlace" href={`/admin/clientes/${c.id}`}>
+                    {c.nombre}
+                  </a>
+                  {c.empresa && <div class="secundario">{c.empresa}</div>}
+                </td>
+                <td data-titulo="Tipo">{TIPOS_CLIENTE[c.tipo]}</td>
+                <td data-titulo="Contacto">
+                  {c.correo}
+                  {c.telefono && <div class="secundario">{c.telefono}</div>}
+                </td>
+                <td class="num" data-titulo="Solicitudes">
+                  {c.solicitudes}
+                </td>
+                <td data-titulo="Última">{formatoFecha(c.ultimaSolicitud)}</td>
+                <td class="num" data-titulo="Pagado">
+                  {formatoCOP(c.totalPagado)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+</Admin>

@@ -1,0 +1,119 @@
+---
+/**
+ * Solicitud de diseño CAD para quien no tiene archivo 3D.
+ * (El cotizador /cotizar es para quien ya tiene un STL o 3MF.)
+ */
+import Base from '@/layouts/Base.astro';
+import CabeceraPagina from '@/components/CabeceraPagina.astro';
+import SolicitudDiseno from '@/components/islas/SolicitudDiseno';
+import { marca } from '@/config/marca';
+import { paquetesCad, abonoDiseno, porcentajeAbonoDiseno } from '@/config/servicios';
+import { migas, servicio } from '@/lib/seo';
+
+const paquetes = paquetesCad.map(({ id, nombre, para }) => ({ id, nombre, para }));
+
+const jsonLd = [
+  servicio(
+    {
+      nombre: 'Diseño CAD a la medida',
+      descripcion: 'Diseño 3D de piezas a partir de una idea, fotos, medidas o una pieza existente, sin necesidad de tener un archivo.',
+      ruta: '/solicitar-diseno',
+      tipo: 'Diseño CAD',
+    },
+    Astro.site,
+  ),
+  migas(
+    [
+      { nombre: 'Diseño CAD', ruta: '/servicios/diseno-cad' },
+      { nombre: 'Solicitar un diseño', ruta: '/solicitar-diseno' },
+    ],
+    Astro.site,
+  ),
+];
+---
+
+<Base
+  titulo="Solicita el diseño 3D de tu pieza"
+  descripcion={`¿No tienes archivo 3D? Descríbenos la pieza, envíanos fotos y medidas, y la diseñamos en CAD. Taller en ${marca.ubicacion.ciudad}, cerca de Bogotá.`}
+  mensajeWhatsApp={`Hola ${marca.nombre}, necesito que me diseñen una pieza en 3D.`}
+  pagina="solicitar-diseno"
+  jsonLd={jsonLd}
+>
+  <CabeceraPagina
+    slot="cabecera"
+    rotulo="Diseño CAD"
+    titulo="¿No tienes archivo 3D? Lo diseñamos por ti"
+    entrada="Cuéntanos qué pieza necesitas, envíanos fotos, medidas o un boceto, y la modelamos en CAD lista para fabricar. No necesitas saber de diseño 3D."
+    migas={[
+      { nombre: 'Diseño CAD', ruta: '/servicios/diseno-cad' },
+      { nombre: 'Solicitar un diseño', ruta: '/solicitar-diseno' },
+    ]}
+  />
+
+  <section class="seccion" aria-label="Formulario de solicitud de diseño">
+    <div class="contenedor dos-columnas solicitud-diseno">
+      <div class="marco">
+        <SolicitudDiseno client:load paquetes={paquetes} abono={porcentajeAbonoDiseno} />
+      </div>
+
+      <aside class="solicitud-diseno__lateral" aria-labelledby="como-titulo">
+        <h2 class="titulo-3" id="como-titulo">Cómo funciona</h2>
+        <ol class="pasos pasos--vertical">
+          <li class="item-linea item-linea--fuerte">
+            <span class="pasos__numero">1</span>
+            <h3 class="titulo-4">Nos cuentas qué necesitas</h3>
+            <p>Con una descripción y unas fotos o medidas es suficiente para empezar.</p>
+          </li>
+          <li class="item-linea item-linea--fuerte">
+            <span class="pasos__numero">2</span>
+            <h3 class="titulo-4">Te enviamos la propuesta</h3>
+            <p>Te decimos qué paquete aplica, el precio del diseño y el plazo. Nada se empieza sin tu aprobación.</p>
+          </li>
+          <li class="item-linea item-linea--fuerte">
+            <span class="pasos__numero">3</span>
+            <h3 class="titulo-4">Diseñamos y revisas</h3>
+            <p>Te mostramos el modelo y hacemos los ajustes incluidos en tu paquete.</p>
+          </li>
+          <li class="item-linea item-linea--fuerte">
+            <span class="pasos__numero">4</span>
+            <h3 class="titulo-4">Recibes el archivo o la pieza</h3>
+            <p>{abonoDiseno}</p>
+          </li>
+        </ol>
+        <p class="secundario">
+          ¿Ya tienes un archivo STL o 3MF? Entonces usa el <a class="enlace" href="/cotizar">cotizador de impresión 3D</a> y obtén el precio al instante.
+          ¿Quieres comparar paquetes? Mira los <a class="enlace" href="/servicios/diseno-cad#paquetes">paquetes de diseño</a>.
+        </p>
+      </aside>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .solicitud-diseno__lateral {
+    display: grid;
+    gap: 24px;
+    align-content: start;
+  }
+
+  .pasos--vertical {
+    grid-template-columns: 1fr !important;
+    gap: 0;
+  }
+
+  .pasos--vertical > li {
+    padding-bottom: 20px;
+  }
+
+  .pasos--vertical .pasos__numero {
+    font-size: 1.75rem;
+    margin-bottom: 4px;
+  }
+
+  @media (min-width: 960px) {
+    .solicitud-diseno__lateral {
+      position: sticky;
+      top: 24px;
+    }
+  }
+</style>

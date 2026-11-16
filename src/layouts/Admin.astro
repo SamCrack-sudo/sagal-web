@@ -1,0 +1,98 @@
+---
+/**
+ * Layout del panel de administración. Comparte el sistema de diseño con el
+ * sitio público, sin analítica ni botón de WhatsApp. Pensado para celular.
+ */
+import '@fontsource-variable/archivo/wdth.css';
+import '@/styles/global.css';
+import '@/styles/admin.css';
+import Logo from '@/components/Logo.astro';
+import { marca } from '@/config/marca';
+
+interface Props {
+  titulo: string;
+  /** Sección activa del menú. */
+  seccion?: 'resumen' | 'solicitudes' | 'clientes' | 'precios' | 'exportar' | null;
+}
+
+const { titulo, seccion = null } = Astro.props;
+const admin = Astro.locals.admin;
+
+const menu = [
+  { id: 'resumen', etiqueta: 'Resumen', href: '/admin' },
+  { id: 'solicitudes', etiqueta: 'Solicitudes', href: '/admin/solicitudes' },
+  { id: 'clientes', etiqueta: 'Clientes', href: '/admin/clientes' },
+  { id: 'precios', etiqueta: 'Precios', href: '/admin/precios' },
+  { id: 'exportar', etiqueta: 'Exportar', href: '/admin/exportar' },
+] as const;
+---
+
+<!doctype html>
+<html lang="es-CO">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content={marca.seo.colorTema} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{titulo} · Panel {marca.nombre}</title>
+  </head>
+  <body class="admin">
+    <a href="#contenido" class="saltar">Saltar al contenido</a>
+    <header class="admin-barra">
+      <div class="admin-barra__fila">
+        <a href="/admin" class="admin-barra__marca" aria-label="Resumen del panel">
+          <Logo tamano={26} />
+          <span class="admin-barra__panel">Panel</span>
+        </a>
+        {
+          admin && (
+            <div class="admin-barra__usuario">
+              <span class="admin-barra__correo">{admin.correo}</span>
+              {!admin.demo && (
+                <form method="post" action="/admin/salir">
+                  <button type="submit" class="boton boton--claro boton--chico">
+                    Salir
+                  </button>
+                </form>
+              )}
+            </div>
+          )
+        }
+      </div>
+      {
+        admin && (
+          <nav class="admin-menu" aria-label="Panel">
+            <ul>
+              {menu.map((m) => (
+                <li>
+                  <a href={m.href} aria-current={seccion === m.id ? 'page' : undefined}>
+                    {m.etiqueta}
+                  </a>
+                </li>
+              ))}
+              <li>
+                <a href="/" target="_blank" rel="noopener">
+                  Ver sitio ↗
+                </a>
+              </li>
+            </ul>
+          </nav>
+        )
+      }
+    </header>
+
+    {
+      admin?.demo && (
+        <p class="admin-demo" role="note">
+          <span class="cinta">Modo demo</span> Datos de ejemplo en memoria: se borran al reiniciar. Configura Supabase y ADMIN_EMAILS para usar datos
+          reales (ver README).
+        </p>
+      )
+    }
+
+    <main id="contenido" class="admin-contenido" tabindex="-1">
+      <slot />
+    </main>
+  </body>
+</html>
