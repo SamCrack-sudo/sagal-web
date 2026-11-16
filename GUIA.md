@@ -137,6 +137,8 @@ No necesitas memorizar esto. Úsalo como plano cuando quieras ubicar algo. Las m
 | `precios.ts` | Los **precios iniciales** del cotizador (de demostración). Los precios reales se cambian en el panel, en `/admin/precios`. Este archivo queda como respaldo si la base de datos no responde. |
 | `servicios.ts` | Los tres paquetes de diseño CAD (simple, medio, complejo): para qué son, qué incluyen, revisiones, plazo y precio. |
 | `navegacion.ts` | Los enlaces del menú superior y de los textos legales del pie de página. |
+| `condiciones.ts` | Tus condiciones comerciales: medios de pago, anticipo, puntos de entrega, vigencia de cotizaciones, garantía y tolerancias. Se usan en los términos, las preguntas frecuentes y la página de seguimiento. |
+| `proyectos.ts` | Los proyectos que se muestran en la portada. Mientras esté vacío, esa sección no aparece. |
 | `funciones.ts` | Interruptores de funciones: el seguimiento de pedidos está encendido; los pagos en línea y la tienda siguen apagados hasta su fase. |
 
 ### `src/pages/`: las páginas (la vitrina) ⚠️

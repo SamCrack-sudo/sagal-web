@@ -16,7 +16,7 @@ interface Paquete {
   para: string;
 }
 
-export default function SolicitudDiseno({ paquetes }: { paquetes: Paquete[] }) {
+export default function SolicitudDiseno({ paquetes, abono }: { paquetes: Paquete[]; abono: number }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [errores, setErrores] = useState<Errores>({});
   const [reinicioTurnstile, setReinicioTurnstile] = useState(0);
@@ -108,7 +108,7 @@ export default function SolicitudDiseno({ paquetes }: { paquetes: Paquete[] }) {
           />
           <label className="casilla">
             <input type="checkbox" name="fabricar" value="true" defaultChecked />
-            <span>También quiero que fabriquen la pieza (impresión 3D). El valor del diseño se abona al pedido de fabricación.</span>
+            <span>También quiero que fabriquen la pieza (impresión 3D). El {Math.round(abono * 100)} % del valor del diseño se descuenta de la fabricación.</span>
           </label>
         </div>
       </fieldset>

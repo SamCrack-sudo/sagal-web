@@ -31,7 +31,7 @@ const l = marca.legal;
           <li>Nombre o razón social: {l.responsable}</li>
           <li>Identificación: {l.identificacion}</li>
           <li>Nombre comercial: {marca.nombre}</li>
-          <li>Domicilio: {marca.ubicacion.ciudad}, {marca.ubicacion.region}, {marca.ubicacion.pais}. {marca.ubicacion.direccion}</li>
+          <li>Domicilio: {marca.ubicacion.ciudad}, {marca.ubicacion.region}, {marca.ubicacion.pais}.</li>
           <li>Correo para asuntos de datos personales: <a href={`mailto:${l.correoDatos}`}>{l.correoDatos}</a></li>
         </ul>
 
@@ -91,14 +91,16 @@ const l = marca.legal;
         <h2>8. Encargados y transferencia internacional</h2>
         <p>
           Para operar el sitio usamos proveedores que pueden almacenar o procesar datos fuera de Colombia, como servicios de alojamiento web, base de
-          datos, envío de correos y analítica [CONFIGURAR: lista de proveedores, p. ej. Cloudflare, Supabase, Resend y el servicio de analítica
-          elegido]. Solo les entregamos lo necesario para prestar el servicio y exigimos condiciones de seguridad adecuadas.
+          datos, envío de correos y analítica: Cloudflare (alojamiento y antispam), Supabase (base de datos y archivos) y Resend (correos), y el
+          servicio de analítica si se activa. Solo les entregamos lo necesario para prestar el servicio y exigimos condiciones de seguridad adecuadas.
         </p>
 
         <h2>9. Seguridad y conservación</h2>
         <p>
           Aplicamos medidas técnicas y administrativas razonables para proteger la información. Conservamos los datos mientras sean necesarios para las
-          finalidades descritas y para cumplir obligaciones legales. [CONFIGURAR: plazo de conservación de archivos de clientes]
+          finalidades descritas y para cumplir obligaciones legales. Los archivos 3D, fotos y planos que nos envías se conservan hasta dos (2) años
+          después de tu última solicitud, para poder reponer piezas; puedes pedir que los borremos antes. Los datos de facturación se conservan el
+          tiempo que exige la ley.
         </p>
 
         <h2>10. Menores de edad</h2>

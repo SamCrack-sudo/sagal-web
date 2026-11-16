@@ -7,6 +7,7 @@
 import Base from '@/layouts/Base.astro';
 import CabeceraPagina from '@/components/CabeceraPagina.astro';
 import { marca } from '@/config/marca';
+import { condiciones } from '@/config/condiciones';
 import { repositorioPublico } from '@/lib/datos';
 import { esCodigoValido } from '@/lib/solicitudes/codigo';
 import { TIPOS_SOLICITUD } from '@/lib/solicitudes/tipos';
@@ -124,6 +125,10 @@ const titulo = s ? `${TIPOS_SOLICITUD[s.tipo]} ${s.codigo}` : 'Pedido no encontr
                 </h2>
                 <p class="aprobar__precio cifra">{formatoCOP(s.precioFinal!)}</p>
                 {s.diasEntrega && <p>Entrega estimada: {s.diasEntrega} días hábiles desde la aprobación.</p>}
+                <p>
+                  Para empezar pedimos un anticipo del {Math.round(condiciones.pagos.anticipo * 100)} % (
+                  {formatoCOP(Math.round(s.precioFinal! * condiciones.pagos.anticipo))}); el saldo se paga al recibir.
+                </p>
                 <form method="post">
                   <input type="hidden" name="accion" value="aprobar" />
                   <button type="submit" class="boton boton--primario">
@@ -145,6 +150,14 @@ const titulo = s ? `${TIPOS_SOLICITUD[s.tipo]} ${s.codigo}` : 'Pedido no encontr
                 <h2 class="titulo-4" id="pago-titulo">
                   Pago
                 </h2>
+                {precio !== null && (
+                  <dl class="especificaciones">
+                    <dt>Anticipo ({Math.round(condiciones.pagos.anticipo * 100)} %) para empezar</dt>
+                    <dd>{formatoCOP(Math.round(precio * condiciones.pagos.anticipo))}</dd>
+                    <dt>Saldo al recibir</dt>
+                    <dd>{formatoCOP(precio - Math.round(precio * condiciones.pagos.anticipo))}</dd>
+                  </dl>
+                )}
                 {s.enlacePago ? (
                   <p>
                     <a class="boton boton--azul" href={s.enlacePago} rel="noopener" target="_blank">
@@ -152,7 +165,7 @@ const titulo = s ? `${TIPOS_SOLICITUD[s.tipo]} ${s.codigo}` : 'Pedido no encontr
                     </a>
                   </p>
                 ) : (
-                  <p class="seguimiento__pago">{marca.pagos.instruccionesTransferencia}</p>
+                  <p class="seguimiento__pago">{condiciones.pagos.instrucciones}</p>
                 )}
               </section>
             )}

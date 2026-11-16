@@ -19,9 +19,9 @@ const calidades = precios.calidades.filter((q) => q.activo);
 
 const preguntas: PreguntaFrecuente[] = [
   {
-    pregunta: '¿Cuál es la diferencia entre PLA, PETG, ASA y TPU?',
+    pregunta: '¿Qué material me conviene?',
     respuesta:
-      'El PLA es rígido y preciso, ideal para prototipos y piezas de interior. El PETG es más tenaz y soporta mejor la temperatura y la humedad. El ASA resiste la intemperie y el sol. El TPU es flexible, como el caucho. Si no sabes cuál elegir, cuéntanos el uso y te recomendamos. [CONFIGURAR: ajusta según tus materiales]',
+      'Depende del uso. El PLA es rígido y preciso, ideal para prototipos y piezas de interior. El PETG aguanta mejor el calor y la humedad. El ABS resiste golpes y temperaturas más altas. El PLA-CF es más rígido y liviano. El LW-PLA es ultraliviano, para aeromodelismo y piezas grandes. El TPU es flexible, como el caucho. Si no sabes cuál elegir, cuéntanos el uso y te recomendamos.',
   },
   {
     pregunta: '¿Qué tan resistente queda una pieza impresa?',
@@ -147,7 +147,6 @@ const jsonLd = [
           </tbody>
         </table>
       </div>
-      {precios.esDemo && <p class="secundario nota-demo">[CONFIGURAR] Catálogo de materiales de ejemplo: confirma los materiales que tienes disponibles.</p>}
     </div>
   </section>
 

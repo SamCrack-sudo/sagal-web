@@ -31,12 +31,15 @@ export const marca = {
 
   contacto: {
     correo: 'sagalrobotics@gmail.com',
-    /** Número de WhatsApp en formato internacional, solo dígitos (ej. 573001234567). */
+    /**
+     * Número de WhatsApp en formato internacional, solo dígitos (ej. 573001234567).
+     * Pendiente: número empresarial. Mientras sea un marcador, el sitio oculta WhatsApp.
+     */
     whatsapp: '[MI NÚMERO CON +57]',
-    /** Usuario de Instagram sin la arroba. */
-    instagram: '[MI_USUARIO]',
-    /** Enlace a la tienda en MercadoLibre (fase 3). */
-    mercadoLibre: '[ENLACE MERCADOLIBRE]',
+    /** Usuario de Instagram sin la arroba. Vacío = no se muestra. */
+    instagram: '',
+    /** Enlace a la tienda en MercadoLibre. Vacío = no se muestra. */
+    mercadoLibre: '',
   },
 
   ubicacion: {
@@ -45,13 +48,14 @@ export const marca = {
     pais: 'Colombia',
     codigoPais: 'CO',
     zona: 'Sabana Centro',
-    /** Dirección física. Déjala como marcador si no quieres publicarla. */
-    direccion: '[DIRECCIÓN DEL TALLER]',
+    /** Dirección física. Vacía = solo se publica la ciudad (el taller funciona en casa). */
+    direccion: '',
     /** Coordenadas aproximadas del centro de Cajicá (dato público). */
     geo: { lat: 4.9186, lng: -74.0255 },
     /** Zonas que se atienden, para SEO local. */
     areaServicio: ['Cajicá', 'Chía', 'Zipaquirá', 'Tabio', 'Tenjo', 'Sopó', 'Cota', 'Bogotá'],
-    horario: '[HORARIO DE ATENCIÓN]',
+    /** Horario de atención. Vacío = no se publica (no hay horario fijo). */
+    horario: '',
   },
 
   legal: {
@@ -65,15 +69,10 @@ export const marca = {
     fechaActualizacion: '[FECHA DE PUBLICACIÓN]',
   },
 
-  pagos: {
-    /** Se muestran en /pedido/[codigo] cuando el pedido no tiene enlace de pago. */
-    instruccionesTransferencia: '[CONFIGURAR: banco, tipo y número de cuenta, titular y a dónde enviar el comprobante]',
-  },
-
   equipos: {
     impresora: 'Bambu Lab P2S',
     sistemaColor: 'AMS 2 Pro',
-    /** Volumen de impresión útil en mm. [CONFIRMAR: 256 × 256 × 256 mm] */
+    /** Volumen de impresión útil en mm (confirmado). */
     volumenImpresion: { x: 256, y: 256, z: 256 },
   },
 
@@ -85,7 +84,8 @@ export const marca = {
     locale: 'es_CO',
   },
 
-  fundacion: '[AÑO DE FUNDACIÓN]',
+  /** Inicio de actividades (matrícula mercantil de mayo de 2023). */
+  fundacion: '2023',
 } as const;
 
 export type Marca = typeof marca;

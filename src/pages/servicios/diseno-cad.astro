@@ -4,7 +4,7 @@ import CabeceraPagina from '@/components/CabeceraPagina.astro';
 import BandaCta from '@/components/BandaCta.astro';
 import Faq from '@/components/Faq.astro';
 import { marca } from '@/config/marca';
-import { paquetesCad, abonoDiseno } from '@/config/servicios';
+import { paquetesCad, abonoDiseno, porcentajeAbonoDiseno } from '@/config/servicios';
 import { migas, paginaFaq, servicio, type PreguntaFrecuente } from '@/lib/seo';
 
 const preguntas: PreguntaFrecuente[] = [
@@ -20,7 +20,12 @@ const preguntas: PreguntaFrecuente[] = [
   },
   {
     pregunta: '¿El archivo queda para mí?',
-    respuesta: 'Sí, te entregamos los archivos del diseño para que los uses. [CONFIGURAR: condiciones de propiedad intelectual y formatos de entrega]',
+    respuesta:
+      'Sí. El diseño es tuyo: te entregamos el archivo editable (STEP) y el listo para imprimir (STL o 3MF), para que lo uses, lo modifiques o lo fabriques donde quieras.',
+  },
+  {
+    pregunta: '¿Qué pasa si después quiero fabricar la pieza?',
+    respuesta: `Si la fabricas con nosotros, el ${porcentajeAbonoDiseno * 100} % de lo que pagaste por el diseño se descuenta del pedido de fabricación.`,
   },
   {
     pregunta: '¿Hacen ingeniería inversa?',

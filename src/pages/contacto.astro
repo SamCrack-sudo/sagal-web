@@ -34,34 +34,30 @@ const jsonLd = [negocioLocal(Astro.site), migas([{ nombre: 'Contacto', ruta: '/c
             <dt>Correo</dt>
             <dd><a href={`mailto:${marca.contacto.correo}`} class="enlace">{marca.contacto.correo}</a></dd>
           </div>
-          <div>
-            <dt>WhatsApp</dt>
-            <dd>
-              {
-                whatsapp ? (
+          {
+            whatsapp && (
+              <div>
+                <dt>WhatsApp</dt>
+                <dd>
                   <a href={whatsapp} class="enlace" target="_blank" rel="noopener" data-evento="clic_whatsapp" data-origen="contacto">
                     +{marca.contacto.whatsapp.replace(/\D/g, '')}
                   </a>
-                ) : (
-                  marca.contacto.whatsapp
-                )
-              }
-            </dd>
-          </div>
-          <div>
-            <dt>Instagram</dt>
-            <dd>
-              {
-                instagram ? (
+                </dd>
+              </div>
+            )
+          }
+          {
+            instagram && (
+              <div>
+                <dt>Instagram</dt>
+                <dd>
                   <a href={instagram} class="enlace" rel="noopener">
                     @{marca.contacto.instagram}
                   </a>
-                ) : (
-                  `[@${marca.contacto.instagram.replace(/[[\]]/g, '')}]`
-                )
-              }
-            </dd>
-          </div>
+                </dd>
+              </div>
+            )
+          }
           <div>
             <dt>Ubicación</dt>
             <dd>
@@ -70,9 +66,17 @@ const jsonLd = [negocioLocal(Astro.site), migas([{ nombre: 'Contacto', ruta: '/c
             </dd>
           </div>
           <div>
-            <dt>Horario</dt>
-            <dd>{marca.ubicacion.horario}</dd>
+            <dt>Entregas</dt>
+            <dd>En puntos acordados de Cajicá y Chía, o por mensajería.</dd>
           </div>
+          {
+            !esMarcador(marca.ubicacion.horario) && (
+              <div>
+                <dt>Horario</dt>
+                <dd>{marca.ubicacion.horario}</dd>
+              </div>
+            )
+          }
         </dl>
         <div class="contacto__atajos">
           <a href="/cotizar" class="boton boton--primario" data-evento="clic_cta_cotizar" data-origen="contacto">Cotizar con archivo</a>

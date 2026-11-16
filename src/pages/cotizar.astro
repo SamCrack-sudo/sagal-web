@@ -4,6 +4,7 @@ import CabeceraPagina from '@/components/CabeceraPagina.astro';
 import Faq from '@/components/Faq.astro';
 import Cotizador from '@/components/islas/cotizador/Cotizador';
 import { repositorioPublico } from '@/lib/datos';
+import { condiciones, textoMedios } from '@/config/condiciones';
 import { marca } from '@/config/marca';
 import { migas, paginaFaq, servicio, type PreguntaFrecuente } from '@/lib/seo';
 
@@ -41,7 +42,7 @@ const preguntas: PreguntaFrecuente[] = [
   {
     pregunta: '¿Cómo se paga?',
     respuesta:
-      'Cuando apruebas la cotización final te enviamos un enlace de pago o los datos para transferencia. [CONFIGURAR: condiciones de anticipo y medios de pago]',
+      `Cuando apruebas la cotización final, pagas un anticipo del ${condiciones.pagos.anticipo * 100} % para empezar la producción y el saldo al recibir. Aceptamos ${textoMedios()}.`,
   },
 ];
 

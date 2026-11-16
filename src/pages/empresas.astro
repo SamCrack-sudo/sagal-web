@@ -5,6 +5,7 @@ import Faq from '@/components/Faq.astro';
 import Icono from '@/components/Icono.astro';
 import FormularioSolicitud from '@/components/islas/FormularioSolicitud';
 import { marca } from '@/config/marca';
+import { condiciones } from '@/config/condiciones';
 import { migas, paginaFaq, servicio, type PreguntaFrecuente } from '@/lib/seo';
 
 const soluciones = [
@@ -42,16 +43,9 @@ const preguntas: PreguntaFrecuente[] = [
       'Depende del material y de cómo se diseñe y oriente la pieza. Para cada caso evaluamos temperatura, carga, químicos y desgaste, y te decimos con claridad si la impresión 3D es la opción adecuada o si conviene otro proceso.',
   },
   {
-    pregunta: '¿Firman acuerdos de confidencialidad?',
-    respuesta: 'Sí, podemos firmar un acuerdo de confidencialidad antes de recibir planos o piezas. [CONFIGURAR: modelo de acuerdo]',
-  },
-  {
-    pregunta: '¿Emiten factura electrónica?',
-    respuesta: '[CONFIGURAR: confirma si emites factura electrónica y bajo qué régimen tributario]',
-  },
-  {
     pregunta: '¿Pueden venir a la planta a tomar medidas?',
-    respuesta: `Atendemos empresas en ${marca.ubicacion.areaServicio.join(', ')}. [CONFIGURAR: condiciones de visitas técnicas]`,
+    respuesta:
+      condiciones.empresas.visitas,
   },
 ];
 

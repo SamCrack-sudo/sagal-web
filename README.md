@@ -51,6 +51,8 @@ src/
     servicios.ts              Paquetes de diseño CAD
     navegacion.ts             Menús
     funciones.ts              Banderas (seguimiento activo; pagos y tienda apagados)
+    condiciones.ts            Pagos, anticipo, entregas, vigencia, garantía y tolerancias
+    proyectos.ts              Proyectos destacados de la portada
   styles/
     tokens.css                Tokens del sistema de diseño
     componentes.css           Botones, campos, tablas, etiquetas de estado, avisos…
@@ -347,33 +349,34 @@ grep -rnE "\[(CONFIGURAR|CONFIRMAR|MARCADOR|MI |FOTO|NOMBRE|DIRECCIÓN|HORARIO|N
 
 ### Datos del negocio (`src/config/marca.ts`)
 
-- [ ] `contacto.whatsapp`: número con 57, solo dígitos (activa el botón de WhatsApp).
-- [ ] `contacto.instagram`: usuario sin arroba.
-- [ ] `contacto.mercadoLibre`: enlace a la tienda (fase 3).
-- [ ] `ubicacion.direccion` (o déjalo sin publicar) y `ubicacion.horario`.
-- [ ] `legal.responsable`, `legal.identificacion` (NIT o cédula), `legal.fechaActualizacion`.
-- [ ] `fundacion`: año.
-- [ ] **CONFIRMAR** el volumen de impresión de 256 × 256 × 256 mm.
-- [ ] `pagos.instruccionesTransferencia`: banco, cuenta, titular y a dónde enviar el comprobante (se muestra en `/pedido/[codigo]`).
+- [ ] `contacto.whatsapp`: número empresarial con 57, solo dígitos. Mientras falte, el sitio oculta WhatsApp.
+- [ ] `contacto.instagram`: usuario sin arroba, cuando crees la cuenta (vacío = no se muestra).
+- [ ] `contacto.mercadoLibre`: enlace a la tienda, cuando exista (fase 3).
+- [ ] `legal.responsable` (nombre o razón social como aparece en la Cámara de Comercio), `legal.identificacion` (NIT del RUT) y `legal.fechaActualizacion`.
+- [x] Ubicación (solo Cajicá, sin dirección ni horario), año de inicio (2023), volumen de impresión (256 mm) y 4 colores del AMS 2 Pro.
+
+### Condiciones comerciales (`src/config/condiciones.ts`)
+
+- [x] Medios de pago (Bancolombia ahorros, Nequi, Bre-B), anticipo del 50 %, puntos de entrega (Universidad Militar en Cajicá, Fontanar y centro de Chía) y mensajería, vigencia de 15 días, garantía de 90 días y tolerancias.
+- [ ] ¿Eres responsable de IVA y emites factura electrónica? (afecta `/terminos`, el IVA del cotizador y las preguntas de empresas).
+- [ ] ¿Firmas acuerdos de confidencialidad con empresas? (se quitó la pregunta del sitio hasta definirlo).
 
 ### Precios y operación
 
-- [ ] Todos los precios de demostración, desde `/admin/precios`: precio por kg, tarifa de máquina, preparación, recargo de color AMS, margen, pedido mínimo, descuentos, urgencias, posprocesados, IVA, calibración y entregas. Luego desmarca «Precios de demostración».
-- [ ] Catálogo real de **materiales y colores** (los actuales son de ejemplo).
-- [ ] **CONFIRMAR** el máximo de colores por pieza del AMS 2 Pro (`maxColores`).
-- [ ] Paquetes CAD (`src/config/servicios.ts`): precio, plazo, revisiones y condiciones del abono al pedido.
-- [ ] Medios de pago, anticipo, facturación electrónica, envíos y zonas de entrega (preguntas frecuentes de `/`, `/cotizar` y `/empresas`).
+- [x] Valores del cotizador aprobados como punto de partida (`esDemo: false`).
+- [ ] **REVISAR** los precios por kg estimados de LW-PLA, PLA-CF y ABS en `/admin/precios`.
+- [ ] Colores reales de cada material.
+- [ ] Calibrar el tiempo con Bambu Studio (`factorCalibracion`).
+- [ ] **REVISAR** los precios y plazos estimados de los paquetes CAD (`src/config/servicios.ts`); abono del 40 % definido.
 
 ### Contenido
 
-- [ ] Fotos, nombres y descripción de 3 proyectos destacados (portada).
-- [ ] Foto del taller o del fundador y, si quieres, su nombre (`/nosotros`).
-- [ ] Documentación entregada en proyectos de robótica; acuerdo de confidencialidad; visitas técnicas.
+- [ ] Proyectos destacados en `src/config/proyectos.ts` (la sección de la portada aparece cuando haya al menos uno).
+- [ ] Si quieres, tu nombre y una foto en `/nosotros`.
 
 ### Legal (borradores: **revísalos con un abogado**)
 
-- [ ] `/politica-de-datos`: proveedores encargados (Cloudflare, Resend, analítica…) y plazo de conservación de archivos.
-- [ ] `/terminos`: vigencia de cotizaciones, IVA, anticipo, tolerancia dimensional, garantía, propiedad de los diseños, entregas.
+- [ ] `/politica-de-datos` y `/terminos`: responsable, NIT, fecha de publicación e IVA; revisar con un abogado las partes marcadas [REVISAR] (cancelaciones y riesgo en envíos).
 
 ### Cuentas y configuración (tú)
 

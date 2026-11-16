@@ -7,7 +7,7 @@ import Base from '@/layouts/Base.astro';
 import CabeceraPagina from '@/components/CabeceraPagina.astro';
 import SolicitudDiseno from '@/components/islas/SolicitudDiseno';
 import { marca } from '@/config/marca';
-import { paquetesCad, abonoDiseno } from '@/config/servicios';
+import { paquetesCad, abonoDiseno, porcentajeAbonoDiseno } from '@/config/servicios';
 import { migas, servicio } from '@/lib/seo';
 
 const paquetes = paquetesCad.map(({ id, nombre, para }) => ({ id, nombre, para }));
@@ -53,7 +53,7 @@ const jsonLd = [
   <section class="seccion" aria-label="Formulario de solicitud de diseño">
     <div class="contenedor dos-columnas solicitud-diseno">
       <div class="marco">
-        <SolicitudDiseno client:load paquetes={paquetes} />
+        <SolicitudDiseno client:load paquetes={paquetes} abono={porcentajeAbonoDiseno} />
       </div>
 
       <aside class="solicitud-diseno__lateral" aria-labelledby="como-titulo">

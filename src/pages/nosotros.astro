@@ -36,11 +36,26 @@ const jsonLd = [migas([{ nombre: 'Nosotros', ruta: '/nosotros' }], Astro.site)];
           También es docente de programación en un colegio. Esa experiencia se nota en cómo explicamos cada proyecto: entiendes qué recibes, cómo
           funciona y cómo cuidarlo.
         </p>
-        <p>[MARCADOR: nombre del fundador, si quieres publicarlo, y una frase en primera persona]</p>
+        <blockquote class="cita">
+          <p>
+            «En planta aprendí que una máquina parada cuesta más que cualquier repuesto. Por eso cada pieza que sale de este taller la diseño, la
+            fabrico y la pruebo como si fuera para mi propia línea de producción.»
+          </p>
+          <footer>Fundador de {marca.nombre}</footer>
+        </blockquote>
       </div>
-      <figure class="nosotros__foto">
-        <div class="pendiente">[FOTO DEL TALLER O DEL FUNDADOR]</div>
-      </figure>
+      <dl class="nosotros__ficha especificaciones" aria-label="Datos del taller">
+        <dt>Taller</dt>
+        <dd>{marca.ubicacion.ciudad}, {marca.ubicacion.region}</dd>
+        <dt>Desde</dt>
+        <dd>{marca.fundacion}</dd>
+        <dt>Impresora</dt>
+        <dd>{marca.equipos.impresora} + {marca.equipos.sistemaColor}</dd>
+        <dt>Formación</dt>
+        <dd>Ingeniería mecatrónica</dd>
+        <dt>Experiencia</dt>
+        <dd>Procesos industriales, mantenimiento en planta y docencia</dd>
+      </dl>
     </div>
   </section>
 
@@ -80,12 +95,8 @@ const jsonLd = [migas([{ nombre: 'Nosotros', ruta: '/nosotros' }], Astro.site)];
       <dl class="especificaciones">
         <dt>Ciudad</dt>
         <dd>{marca.ubicacion.ciudad}, {marca.ubicacion.region}</dd>
-        <dt>Dirección</dt>
-        <dd>{marca.ubicacion.direccion}</dd>
-        <dt>Horario</dt>
-        <dd>{marca.ubicacion.horario}</dd>
-        <dt>Desde</dt>
-        <dd>{marca.fundacion}</dd>
+        <dt>Entregas</dt>
+        <dd>Puntos acordados en Cajicá y Chía, o mensajería</dd>
       </dl>
     </div>
   </section>
@@ -99,7 +110,21 @@ const jsonLd = [migas([{ nombre: 'Nosotros', ruta: '/nosotros' }], Astro.site)];
 </Base>
 
 <style>
-  .nosotros__foto {
-    margin: 0;
+  .cita {
+    margin: 8px 0 0;
+    padding: 4px 0 4px 20px;
+    border-left: 3px solid var(--c-acento);
+  }
+
+  .cita p {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--c-texto-fuerte);
+  }
+
+  .cita footer {
+    margin-top: 8px;
+    font-size: var(--f-pequeno);
+    color: var(--c-texto-3);
   }
 </style>

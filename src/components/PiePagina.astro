@@ -38,28 +38,24 @@ const anio = new Date().getFullYear();
       <h2 class="pie__titulo">Contacto</h2>
       <ul>
         <li><a href={`mailto:${marca.contacto.correo}`}>{marca.contacto.correo}</a></li>
-        <li>
-          {
-            whatsapp ? (
+        {
+          whatsapp && (
+            <li>
               <a href={whatsapp} data-evento="clic_whatsapp" data-origen="pie">
                 WhatsApp
               </a>
-            ) : (
-              <span>WhatsApp {marca.contacto.whatsapp}</span>
-            )
-          }
-        </li>
-        <li>
-          {
-            instagram ? (
+            </li>
+          )
+        }
+        {
+          instagram && (
+            <li>
               <a href={instagram} rel="noopener">
                 Instagram @{marca.contacto.instagram}
               </a>
-            ) : (
-              <span>Instagram [@{marca.contacto.instagram.replace(/[[\]]/g, '')}]</span>
-            )
-          }
-        </li>
+            </li>
+          )
+        }
         {!esMarcador(marca.ubicacion.horario) && <li>{marca.ubicacion.horario}</li>}
       </ul>
     </div>

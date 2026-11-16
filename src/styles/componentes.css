@@ -501,6 +501,16 @@ fieldset.grupo > legend {
   background: var(--c-fondo);
 }
 
+.tabla tbody th {
+  font-size: inherit;
+  font-weight: 700;
+  font-stretch: 100%;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--c-texto-fuerte);
+  background: transparent;
+}
+
 .tabla tbody tr:last-child :is(td, th) {
   border-bottom: 0;
 }
@@ -1028,4 +1038,9 @@ fieldset.grupo > legend {
 
 .seccion--azul .campo__opcional {
   color: var(--c-sobre-azul-3);
+}
+
+/* Rótulo seguido de título dentro de texto largo: sin el margen grande de .prosa h2 */
+.prosa > .rotulo + h2 {
+  margin-top: 0;
 }

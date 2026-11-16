@@ -6,7 +6,7 @@
 insert into public.configuracion (clave, valor, actualizado_por)
 values ('precios', '{
   "moneda": "COP",
-  "esDemo": true,
+  "esDemo": false,
   "desperdicio": 0.08,
   "paredes": {
     "lineas": 2,
@@ -76,10 +76,39 @@ values ('precios', '{
       "activo": true
     },
     {
+      "id": "lw-pla",
+      "nombre": "LW-PLA (ligero)",
+      "descripcion": "PLA espumado: hasta la mitad del peso de una pieza normal, con acabado mate.",
+      "usos": "Aeromodelismo, drones, cosplay y piezas grandes donde importa el peso.",
+      "densidad": 0.8,
+      "precioKg": 180000,
+      "factorVelocidad": 0.7,
+      "permiteMulticolor": false,
+      "colores": [
+        "blanco",
+        "negro"
+      ],
+      "activo": true
+    },
+    {
+      "id": "pla-cf",
+      "nombre": "PLA-CF (fibra de carbono)",
+      "descripcion": "PLA reforzado con fibra de carbono: más rígido, liviano y con acabado mate técnico.",
+      "usos": "Soportes rígidos, piezas estructurales, accesorios para drones y herramentales.",
+      "densidad": 1.3,
+      "precioKg": 160000,
+      "factorVelocidad": 0.9,
+      "permiteMulticolor": true,
+      "colores": [
+        "negro"
+      ],
+      "activo": true
+    },
+    {
       "id": "petg",
       "nombre": "PETG",
       "descripcion": "Más tenaz que el PLA y resiste mejor la temperatura y la humedad.",
-      "usos": "Piezas funcionales, soportes mecánicos, guardas y piezas con algo de calor.",
+      "usos": "Piezas funcionales, soportes mecánicos, guardas y piezas con algo de calor o agua.",
       "densidad": 1.27,
       "precioKg": 110000,
       "factorVelocidad": 0.9,
@@ -94,18 +123,20 @@ values ('precios', '{
       "activo": true
     },
     {
-      "id": "asa",
-      "nombre": "ASA",
-      "descripcion": "Resiste la intemperie, los rayos UV y temperaturas más altas.",
-      "usos": "Piezas para exteriores, repuestos industriales y entornos con calor.",
-      "densidad": 1.07,
-      "precioKg": 120000,
+      "id": "abs",
+      "nombre": "ABS",
+      "descripcion": "Resistente al impacto y a temperaturas más altas que el PLA y el PETG.",
+      "usos": "Carcasas, piezas para vehículos (interior), repuestos industriales y piezas cerca de motores.",
+      "densidad": 1.04,
+      "precioKg": 105000,
       "factorVelocidad": 0.85,
       "permiteMulticolor": true,
       "colores": [
         "negro",
         "blanco",
-        "gris"
+        "gris",
+        "rojo",
+        "azul"
       ],
       "activo": true
     },

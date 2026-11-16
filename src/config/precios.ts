@@ -1,15 +1,15 @@
 /**
- * CONFIGURACIÓN INICIAL DE PRECIOS — VALORES DE DEMOSTRACIÓN
- * ──────────────────────────────────────────────────────────
- * [CONFIGURAR] Ninguno de estos valores es un precio real de SAGAL Robotics.
- * Son números redondos de ejemplo para que el cotizador funcione en la vista
- * previa. Cámbialos por tus costos reales antes de publicar:
- *   - Fase 1: editando este archivo.
- *   - Fase 2: desde /admin → Precios y materiales (se guardan en Supabase).
+ * CONFIGURACIÓN INICIAL DE PRECIOS
+ * ────────────────────────────────
+ * Valores aprobados como punto de partida (noviembre de 2026). Los precios
+ * reales se ajustan desde /admin → Precios (se guardan en Supabase); este
+ * archivo es el valor inicial y el respaldo si la base de datos no responde.
+ * Tras cambiarlo, regenera la semilla con `npm run semilla`.
  *
- * Las densidades son valores típicos de cada familia de material: confírmalas
- * con la ficha técnica de tu proveedor. Mientras `esDemo` sea true, el
- * cotizador muestra el aviso "precios de demostración".
+ * [REVISAR] Los precios por kg de LW-PLA, PLA-CF y ABS son estimaciones:
+ * ajústalos con lo que te cuesta cada rollo. Las densidades son valores
+ * típicos de cada familia: confírmalas con la ficha técnica del proveedor.
+ * [CONFIGURAR] Los colores disponibles por material aún no están definidos.
  */
 import type { ConfigPrecios } from '@/lib/precios/tipos';
 
@@ -17,7 +17,7 @@ const coloresBasicos = ['negro', 'blanco', 'gris', 'azul', 'rojo', 'naranja', 'v
 
 export const configPreciosInicial: ConfigPrecios = {
   moneda: 'COP',
-  esDemo: true, // [CONFIGURAR] pásalo a false cuando pongas tus precios reales
+  esDemo: false, // Valores aprobados; vuelve a true para mostrar el aviso de demostración
 
   desperdicio: 0.08, // [CONFIGURAR] 8 %
   paredes: { lineas: 2, anchoLineaMm: 0.42 }, // [CONFIGURAR] perfil del laminador
@@ -28,15 +28,15 @@ export const configPreciosInicial: ConfigPrecios = {
   factorCalibracion: 1, // [CONFIGURAR]
   horasMinimasPorPieza: 0.25, // [CONFIGURAR]
 
-  tarifaMaquinaHora: 5000, // [CONFIGURAR] DEMO
-  preparacionPorPedido: 5000, // [CONFIGURAR] DEMO
-  recargoCambioColor: 1500, // [CONFIGURAR] DEMO
-  maxColores: 4, // [CONFIRMAR] ranuras disponibles del AMS 2 Pro
+  tarifaMaquinaHora: 5000,
+  preparacionPorPedido: 5000,
+  recargoCambioColor: 1500,
+  maxColores: 4, // Confirmado: AMS 2 Pro
 
-  margen: 0.4, // [CONFIGURAR] DEMO
-  pedidoMinimo: 20000, // [CONFIGURAR] DEMO
+  margen: 0.4,
+  pedidoMinimo: 20000,
   descuentosCantidad: [
-    // [CONFIGURAR] DEMO
+   
     { desde: 5, descuento: 0.05 },
     { desde: 10, descuento: 0.1 },
     { desde: 25, descuento: 0.15 },
@@ -49,7 +49,7 @@ export const configPreciosInicial: ConfigPrecios = {
     diasPreparacion: 1, // [CONFIGURAR]
   },
 
-  // [CONFIGURAR] Catálogo de materiales de ejemplo: ajusta según tu inventario.
+  // Materiales disponibles en el taller. [CONFIGURAR] colores de cada uno.
   materiales: [
     {
       id: 'pla',
@@ -57,34 +57,58 @@ export const configPreciosInicial: ConfigPrecios = {
       descripcion: 'Rígido, preciso y con buen acabado. El más versátil.',
       usos: 'Prototipos, maquetas, carcasas, soportes y piezas de uso interior.',
       densidad: 1.24,
-      precioKg: 100000, // [CONFIGURAR] DEMO
+      precioKg: 100000,
       factorVelocidad: 1,
       permiteMulticolor: true,
       colores: coloresBasicos,
       activo: true,
     },
     {
+      id: 'lw-pla',
+      nombre: 'LW-PLA (ligero)',
+      descripcion: 'PLA espumado: hasta la mitad del peso de una pieza normal, con acabado mate.',
+      usos: 'Aeromodelismo, drones, cosplay y piezas grandes donde importa el peso.',
+      densidad: 0.8, // densidad efectiva espumado: depende de la temperatura de impresión
+      precioKg: 180000, // [REVISAR] estimado
+      factorVelocidad: 0.7,
+      permiteMulticolor: false,
+      colores: ['blanco', 'negro'],
+      activo: true,
+    },
+    {
+      id: 'pla-cf',
+      nombre: 'PLA-CF (fibra de carbono)',
+      descripcion: 'PLA reforzado con fibra de carbono: más rígido, liviano y con acabado mate técnico.',
+      usos: 'Soportes rígidos, piezas estructurales, accesorios para drones y herramentales.',
+      densidad: 1.3,
+      precioKg: 160000, // [REVISAR] estimado
+      factorVelocidad: 0.9,
+      permiteMulticolor: true,
+      colores: ['negro'],
+      activo: true,
+    },
+    {
       id: 'petg',
       nombre: 'PETG',
       descripcion: 'Más tenaz que el PLA y resiste mejor la temperatura y la humedad.',
-      usos: 'Piezas funcionales, soportes mecánicos, guardas y piezas con algo de calor.',
+      usos: 'Piezas funcionales, soportes mecánicos, guardas y piezas con algo de calor o agua.',
       densidad: 1.27,
-      precioKg: 110000, // [CONFIGURAR] DEMO
+      precioKg: 110000,
       factorVelocidad: 0.9,
       permiteMulticolor: true,
       colores: ['negro', 'blanco', 'gris', 'azul', 'transparente'],
       activo: true,
     },
     {
-      id: 'asa',
-      nombre: 'ASA',
-      descripcion: 'Resiste la intemperie, los rayos UV y temperaturas más altas.',
-      usos: 'Piezas para exteriores, repuestos industriales y entornos con calor.',
-      densidad: 1.07,
-      precioKg: 120000, // [CONFIGURAR] DEMO
+      id: 'abs',
+      nombre: 'ABS',
+      descripcion: 'Resistente al impacto y a temperaturas más altas que el PLA y el PETG.',
+      usos: 'Carcasas, piezas para vehículos (interior), repuestos industriales y piezas cerca de motores.',
+      densidad: 1.04,
+      precioKg: 105000, // [REVISAR] estimado
       factorVelocidad: 0.85,
       permiteMulticolor: true,
-      colores: ['negro', 'blanco', 'gris'],
+      colores: ['negro', 'blanco', 'gris', 'rojo', 'azul'],
       activo: true,
     },
     {
@@ -93,7 +117,7 @@ export const configPreciosInicial: ConfigPrecios = {
       descripcion: 'Flexible y resistente al desgaste, similar al caucho.',
       usos: 'Empaques, amortiguadores, protectores, agarres y correas.',
       densidad: 1.21,
-      precioKg: 150000, // [CONFIGURAR] DEMO
+      precioKg: 150000,
       factorVelocidad: 0.45,
       permiteMulticolor: false,
       colores: ['negro', 'blanco'],
@@ -113,7 +137,7 @@ export const configPreciosInicial: ConfigPrecios = {
     { id: 'transparente', nombre: 'Transparente', hex: '#dfe8ee', activo: true },
   ],
 
-  // [CONFIGURAR] factores de velocidad relativos a 0,20 mm
+  // Factores de velocidad relativos a 0,20 mm (ajústalos al calibrar)
   calidades: [
     {
       id: 'fina',
@@ -143,14 +167,14 @@ export const configPreciosInicial: ConfigPrecios = {
 
   posprocesados: [
     { id: 'ninguno', nombre: 'Sin posprocesado', descripcion: 'La pieza como sale de la impresora, sin soportes.', costoPorPieza: 0, diasExtra: 0, activo: true },
-    { id: 'lijado', nombre: 'Lijado', descripcion: 'Superficies visibles lijadas para un acabado más uniforme.', costoPorPieza: 15000, diasExtra: 1, activo: true }, // [CONFIGURAR] DEMO
-    { id: 'insertos', nombre: 'Insertos roscados', descripcion: 'Instalación de insertos metálicos para tornillos.', costoPorPieza: 8000, diasExtra: 1, activo: true }, // [CONFIGURAR] DEMO
-    { id: 'pintura', nombre: 'Imprimación y pintura', descripcion: 'Acabado pintado en el color que elijas.', costoPorPieza: 40000, diasExtra: 3, activo: true }, // [CONFIGURAR] DEMO
+    { id: 'lijado', nombre: 'Lijado', descripcion: 'Superficies visibles lijadas para un acabado más uniforme.', costoPorPieza: 15000, diasExtra: 1, activo: true },
+    { id: 'insertos', nombre: 'Insertos roscados', descripcion: 'Instalación de insertos metálicos para tornillos.', costoPorPieza: 8000, diasExtra: 1, activo: true },
+    { id: 'pintura', nombre: 'Imprimación y pintura', descripcion: 'Acabado pintado en el color que elijas.', costoPorPieza: 40000, diasExtra: 3, activo: true },
   ],
 
   urgencias: [
     { id: 'normal', nombre: 'Normal', descripcion: 'Plazo estándar.', recargo: 0, factorPlazo: 1, activo: true },
-    { id: 'prioritaria', nombre: 'Prioritaria', descripcion: 'Pasa adelante en la cola de producción.', recargo: 0.25, factorPlazo: 0.6, activo: true }, // [CONFIGURAR] DEMO
-    { id: 'urgente', nombre: 'Urgente', descripcion: 'Lo más pronto posible, según disponibilidad.', recargo: 0.6, factorPlazo: 0.35, activo: true }, // [CONFIGURAR] DEMO
+    { id: 'prioritaria', nombre: 'Prioritaria', descripcion: 'Pasa adelante en la cola de producción.', recargo: 0.25, factorPlazo: 0.6, activo: true },
+    { id: 'urgente', nombre: 'Urgente', descripcion: 'Lo más pronto posible, según disponibilidad.', recargo: 0.6, factorPlazo: 0.35, activo: true },
   ],
 };
