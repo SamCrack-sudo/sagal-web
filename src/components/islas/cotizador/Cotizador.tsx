@@ -4,7 +4,7 @@
  * medidas reales, se verifica contra el volumen de impresión y el precio se
  * calcula en vivo con el mismo motor que usa el servidor. Al enviar, el
  * servidor vuelve a leer el archivo y recalcula el precio.
- * Si no tiene archivo, abre una solicitud de diseño CAD.
+ * Si no tiene archivo, se le envía a /solicitar-diseno (diseño CAD).
  */
 import { lazy, Suspense, useCallback, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react';
 import type { ConfigPrecios } from '@/lib/precios/tipos';
@@ -23,11 +23,11 @@ import {
   type MetricasMalla,
   type UnidadArchivo,
 } from '@/lib/malla';
-import { REGLAS_FOTOS, validarArchivos, validarContacto, type Errores } from '@/lib/solicitudes/validacion';
+import { validarContacto, type Errores } from '@/lib/solicitudes/validacion';
 import { registrarEvento } from '@/lib/cliente/analitica';
 import Parametros, { valoresIniciales, type ValoresParametros } from './Parametros';
 import PanelPrecio from './PanelPrecio';
-import { CampoArchivos, CampoArea, CampoTexto, CamposContacto, Consentimiento, Trampa } from '../formularios/campos';
+import { CampoArea, CamposContacto, Consentimiento, Trampa } from '../formularios/campos';
 import { Turnstile } from '../formularios/Turnstile';
 import { Confirmacion } from '../formularios/Confirmacion';
 import { camposDe, enfocarPrimerError, useEnvio } from '../formularios/envio';
@@ -41,7 +41,7 @@ interface Props {
   volumen: Volumen;
 }
 
-type Modo = 'inicio' | 'archivo' | 'diseno';
+type Modo = 'inicio' | 'archivo';
 
 interface Pieza {
   archivo: File;
@@ -78,7 +78,7 @@ export default function Cotizador({ config, volumen }: Props) {
       setErrorArchivo(null);
       const ext = extensionDe(archivo.name);
       if (ext !== '.stl' && ext !== '.3mf') {
-        setErrorArchivo('Solo aceptamos archivos STL o 3MF. Si tienes otro formato (STEP, OBJ, DWG…), usa “No tengo archivo” y adjúntalo.');
+        setErrorArchivo('Solo aceptamos archivos STL o 3MF. Si tienes otro formato (STEP, OBJ, DWG…), solicita un diseño CAD y adjúntalo allí.');
         return;
       }
       if (archivo.size > TAM_MAX_MODELO) {
@@ -143,20 +143,11 @@ export default function Cotizador({ config, volumen }: Props) {
     const datos = new FormData(form);
     const nuevos: Errores = { ...validarContacto(camposDe(datos)).errores };
 
-    if (modo === 'diseno') {
-      const descripcion = String(datos.get('descripcion') ?? '').trim();
-      if (descripcion.length < 15) nuevos.descripcion = 'Cuéntanos con algo más de detalle qué necesitas (mínimo 15 caracteres).';
-      const fotos = datos.getAll('fotos').filter((f): f is File => f instanceof File && f.size > 0);
-      const errorFotos = validarArchivos(fotos, REGLAS_FOTOS);
-      if (errorFotos) nuevos.fotos = errorFotos;
-      datos.set('modalidad', 'diseno');
-    } else {
-      if (!pieza || !resultado) return;
-      datos.set('modalidad', 'archivo');
-      datos.set('modelo', pieza.archivo, pieza.archivo.name);
-      datos.set('unidad', unidad);
-      datos.set('parametros', JSON.stringify(valores));
-    }
+    if (!pieza || !resultado) return;
+    datos.set('modalidad', 'archivo');
+    datos.set('modelo', pieza.archivo, pieza.archivo.name);
+    datos.set('unidad', unidad);
+    datos.set('parametros', JSON.stringify(valores));
 
     setErrores(nuevos);
     if (Object.keys(nuevos).length) {
@@ -165,10 +156,7 @@ export default function Cotizador({ config, volumen }: Props) {
     }
     const r = await enviar(datos);
     if (r.ok) {
-      registrarEvento(modo === 'diseno' ? 'solicitud_cad_envio' : 'cotizacion_envio', {
-        demo: r.demo,
-        valor: modo === 'archivo' ? r.total : undefined,
-      });
+      registrarEvento('cotizacion_envio', { demo: r.demo, valor: r.total });
       window.scrollTo({ top: (document.getElementById('cotizador')?.offsetTop ?? 0) - 16, behavior: 'smooth' });
     } else {
       setErrores(r.errores ?? {});
@@ -183,17 +171,16 @@ export default function Cotizador({ config, volumen }: Props) {
       <div className="cotizador">
         <Confirmacion
           respuesta={respuesta}
-          titulo={modo === 'diseno' ? 'Recibimos tu solicitud de diseño' : 'Recibimos tu cotización'}
+          titulo="Recibimos tu cotización"
           onOtra={reiniciarTodo}
           textoOtra="Cotizar otra pieza"
         >
-          {modo === 'archivo' && typeof respuesta.total === 'number' && (
+          {typeof respuesta.total === 'number' && (
             <p>
               Precio estimado: <strong>{formatoCOP(respuesta.total)}</strong>. Revisamos tu archivo y te confirmamos el valor final y el
               plazo antes de fabricar.
             </p>
           )}
-          {modo === 'diseno' && <p>Revisamos tu descripción y te enviamos una propuesta de diseño con su precio.</p>}
         </Confirmacion>
       </div>
     );
@@ -258,16 +245,9 @@ export default function Cotizador({ config, volumen }: Props) {
                 fabricación.
               </p>
             </div>
-            <button
-              type="button"
-              className="boton boton--contorno"
-              onClick={() => {
-                marcarInicio();
-                setModo('diseno');
-              }}
-            >
-              No tengo archivo
-            </button>
+            <a className="boton boton--contorno" href="/solicitar-diseno">
+              Solicitar un diseño CAD
+            </a>
           </div>
         </div>
       )}
@@ -359,75 +339,29 @@ export default function Cotizador({ config, volumen }: Props) {
         </div>
       )}
 
-      {/* ── Paso 2b: solicitud de diseño CAD ── */}
-      {modo === 'diseno' && (
-        <div className="cotizador__diseno-cabecera">
-          <div>
-            <h2 className="titulo-3">Solicitud de diseño CAD</h2>
-            <p className="secundario">
-              Con una descripción, fotos y medidas podemos modelar la pieza. Si es un repuesto, fotografíalo junto a una regla o un calibrador.
-            </p>
-          </div>
-          <button type="button" className="boton boton--texto" onClick={reiniciarTodo}>
-            Tengo un archivo
-          </button>
-        </div>
-      )}
-
       {/* ── Paso 3: datos de contacto y envío ── */}
-      {modo !== 'inicio' && (
+      {modo === 'archivo' && (
         <form className="cotizador__envio formulario" id={ID_ENVIO} onSubmit={alEnviar} noValidate tabIndex={-1}>
           <Trampa />
-          {modo === 'diseno' && (
-            <fieldset className="grupo">
-              <legend>La pieza</legend>
-              <div className="formulario__pila">
-                <CampoArea
-                  etiqueta="¿Qué necesitas?"
-                  name="descripcion"
-                  rows={5}
-                  maxLength={4000}
-                  error={errores.descripcion}
-                  placeholder="Para qué sirve la pieza, dónde va montada, qué esfuerzos soporta, si reemplaza una pieza rota…"
-                />
-                <div className="fila-campos fila-campos--3">
-                  <CampoTexto etiqueta="Medidas principales" name="medidas" opcional maxLength={600} placeholder="Ej.: 80 × 40 × 25 mm" />
-                  <CampoTexto etiqueta="Uso o ambiente" name="uso" opcional maxLength={300} placeholder="Interior, exterior, calor…" />
-                  <CampoTexto etiqueta="Cantidad" name="cantidad" opcional maxLength={20} inputMode="numeric" placeholder="1" />
-                </div>
-                <CampoArchivos
-                  etiqueta="Fotos, bocetos o planos"
-                  name="fotos"
-                  multiple
-                  accept={REGLAS_FOTOS.extensiones.join(',')}
-                  error={errores.fotos}
-                  ayuda="Hasta 5 imágenes o PDF de 10 MB cada uno."
-                />
-              </div>
-            </fieldset>
-          )}
-
           <fieldset className="grupo">
-            <legend>{modo === 'archivo' ? 'Envíanos la cotización para revisarla' : 'Tus datos'}</legend>
+            <legend>Envíanos la cotización para revisarla</legend>
             <div className="formulario__pila">
               <CamposContacto errores={errores} />
-              {modo === 'archivo' && (
-                <CampoArea
-                  etiqueta="Notas para el taller"
-                  name="notas"
-                  opcional
-                  rows={3}
-                  maxLength={2000}
-                  placeholder="Colores por zona, tolerancias, fecha límite, si la pieza encaja con otra…"
-                />
-              )}
+              <CampoArea
+                etiqueta="Notas para el taller"
+                name="notas"
+                opcional
+                rows={3}
+                maxLength={2000}
+                placeholder="Colores por zona, tolerancias, fecha límite, si la pieza encaja con otra…"
+              />
             </div>
           </fieldset>
 
           <Consentimiento error={errores.consentimiento} />
           <Turnstile reinicio={reinicioTurnstile} />
 
-          {modo === 'archivo' && bloqueado && <p className="aviso aviso--alerta">{bloqueado}</p>}
+          {bloqueado && <p className="aviso aviso--alerta">{bloqueado}</p>}
           {estado === 'error' && respuesta?.mensaje && (
             <p className="aviso aviso--error" role="alert">
               {respuesta.mensaje}
@@ -435,10 +369,10 @@ export default function Cotizador({ config, volumen }: Props) {
           )}
 
           <div className="cotizador__enviar">
-            <button type="submit" className="boton boton--primario" disabled={estado === 'enviando' || (modo === 'archivo' && !resultado)}>
-              {estado === 'enviando' ? 'Enviando…' : modo === 'archivo' ? 'Enviar cotización' : 'Enviar solicitud de diseño'}
+            <button type="submit" className="boton boton--primario" disabled={estado === 'enviando' || !resultado}>
+              {estado === 'enviando' ? 'Enviando…' : 'Enviar cotización'}
             </button>
-            {modo === 'archivo' && resultado && (
+            {resultado && (
               <span className="secundario">
                 Total estimado <strong className="cifra">{formatoCOP(resultado.pedido.total)}</strong> · sin compromiso
               </span>

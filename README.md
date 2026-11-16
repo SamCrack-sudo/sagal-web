@@ -82,7 +82,7 @@ scripts/generar-semilla.mjs   Genera supabase/seed.sql desde src/config/precios.
 
 ### Mapa del sitio
 
-Público: `/` · `/cotizar` · `/servicios/impresion-3d` · `/servicios/diseno-cad` · `/servicios/robotica-y-electronica` · `/empresas` · `/contacto` · `/nosotros` · `/pedido/[codigo]` · `/politica-de-datos` · `/terminos` · 404 · 500 · `/robots.txt` · `/sitemap-index.xml`
+Público: `/` · `/cotizar` (con archivo) · `/solicitar-diseno` (sin archivo: diseño CAD) · `/servicios/impresion-3d` · `/servicios/diseno-cad` · `/servicios/robotica-y-electronica` · `/empresas` · `/contacto` · `/nosotros` · `/pedido/[codigo]` · `/politica-de-datos` · `/terminos` · 404 · 500 · `/robots.txt` · `/sitemap-index.xml`
 
 Panel: `/admin` (resumen) · `/admin/solicitudes` · `/admin/solicitudes/[id]` · `/admin/clientes` · `/admin/clientes/[id]` · `/admin/precios` · `/admin/exportar` · `/admin/ingresar`
 

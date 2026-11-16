@@ -146,7 +146,8 @@ Cada archivo es una página. El nombre del archivo es la dirección:
 | Archivo | Dirección | Qué es |
 | --- | --- | --- |
 | `index.astro` | `/` | Portada: el mecanismo 3D, servicios, cotizador, proceso, proyectos, confianza, preguntas frecuentes. |
-| `cotizar.astro` | `/cotizar` | La página del cotizador y sus preguntas frecuentes. |
+| `cotizar.astro` | `/cotizar` | El cotizador, para quien **ya tiene** un archivo 3D (STL o 3MF). |
+| `solicitar-diseno.astro` | `/solicitar-diseno` | Para quien **no tiene** archivo: pide que le diseñen la pieza con descripción, fotos y medidas. |
 | `servicios/impresion-3d.astro` | `/servicios/impresion-3d` | Servicio de impresión 3D. |
 | `servicios/diseno-cad.astro` | `/servicios/diseno-cad` | Servicio de diseño CAD y sus paquetes. |
 | `servicios/robotica-y-electronica.astro` | `/servicios/robotica-y-electronica` | Servicio de robótica y electrónica. |

@@ -109,8 +109,7 @@
   min-width: 0;
 }
 
-.cotizador__cabecera-pieza,
-.cotizador__diseno-cabecera {
+.cotizador__cabecera-pieza {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -120,12 +119,6 @@
 
 .cotizador__cabecera-pieza h2 {
   overflow-wrap: anywhere;
-}
-
-.cotizador__diseno-cabecera > div {
-  flex: 1 1 420px;
-  display: grid;
-  gap: 8px;
 }
 
 /* ── Visor ── */

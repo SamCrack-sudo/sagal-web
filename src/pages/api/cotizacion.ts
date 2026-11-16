@@ -7,6 +7,7 @@
 import type { APIRoute } from 'astro';
 import { marca } from '@/config/marca';
 import { repositorioPublico } from '@/lib/datos';
+import { paquetesCad } from '@/config/servicios';
 import {
   calcularMetricas,
   ErrorMalla,
@@ -36,6 +37,8 @@ export const POST: APIRoute = async ({ request }) => {
     const medidas = texto(form.campos.medidas, 600);
     const uso = texto(form.campos.uso, 300);
     const cantidad = texto(form.campos.cantidad, 20);
+    const paquete = paquetesCad.find((p) => p.id === form.campos.paquete);
+    const fabricar = form.campos.fabricar === 'true' || form.campos.fabricar === 'on';
     const fotos = form.archivos.fotos ?? [];
     if (descripcion.length < 15) errores.descripcion = 'Cuéntanos con algo más de detalle qué necesitas (mínimo 15 caracteres).';
     const errorFotos = validarArchivos(fotos, REGLAS_FOTOS);
@@ -50,6 +53,8 @@ export const POST: APIRoute = async ({ request }) => {
       ['Medidas', medidas || 'No indicadas'],
       ['Uso de la pieza', uso || 'No indicado'],
       ['Cantidad', cantidad || 'No indicada'],
+      ['Paquete estimado por el cliente', paquete ? paquete.nombre : 'No está seguro'],
+      ['¿También fabricar?', fabricar ? 'Sí, quiere que se imprima' : 'No, solo el diseño'],
       ['Fotos', fotos.length ? fotos.map((f) => f.name).join(', ') : 'Sin fotos'],
     ];
     const r = await registrarYNotificar(ctx, {
@@ -59,7 +64,7 @@ export const POST: APIRoute = async ({ request }) => {
       filasCliente: filas,
       filasDueno: [['Código', ctx.codigo], ...filas],
       archivos: fotos.map((archivo) => ({ archivo, rol: 'foto' as const })),
-      guardar: { descripcion, datos: { medidas, uso, cantidad } },
+      guardar: { descripcion, datos: { medidas, uso, cantidad, paquete: paquete?.nombre ?? null, fabricar } },
     });
     return json(r, r.ok ? 200 : 502);
   }
