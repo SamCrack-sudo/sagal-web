@@ -21,5 +21,5 @@ export function celda(valor: string | number | boolean | null | undefined): stri
 export function aCsv<T>(columnas: Columna<T>[], filas: T[]): string {
   const lineas = [columnas.map((c) => celda(c.titulo)).join(SEPARADOR)];
   for (const f of filas) lineas.push(columnas.map((c) => celda(c.valor(f))).join(SEPARADOR));
-  return `﻿${lineas.join('\r\n')}\r\n`;
+  return `\uFEFF${lineas.join('\r\n')}\r\n`;
 }

@@ -33,7 +33,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (errorAdjuntos) errores.adjuntos = errorAdjuntos;
 
   let filas: Filas;
-  let datos: Record<string, unknown> = {};
+  let datos: Record<string, unknown>;
   let contactoExtra: { empresa?: string; nit?: string; facturacion?: Record<string, string> } | undefined;
   if (tipo === 'empresa') {
     const empresa = validarEmpresa(form.campos);
