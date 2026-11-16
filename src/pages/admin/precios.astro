@@ -1,0 +1,18 @@
+---
+import Admin from '@/layouts/Admin.astro';
+import EditorPrecios from '@/components/islas/admin/EditorPrecios';
+
+export const prerender = false;
+
+const config = await Astro.locals.repoAdmin!.leerPrecios();
+---
+
+<Admin titulo="Precios y materiales" seccion="precios">
+  <div class="admin-cabecera">
+    <div>
+      <h1>Precios y materiales</h1>
+      <p>Los cambios se aplican al cotizador en cuanto los guardas.</p>
+    </div>
+  </div>
+  <EditorPrecios client:load inicial={config} demo={Astro.locals.admin?.demo ?? false} />
+</Admin>

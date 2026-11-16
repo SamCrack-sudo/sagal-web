@@ -438,3 +438,104 @@
   display: grid;
   gap: var(--e-5);
 }
+
+/* Editor de precios */
+.editor-precios {
+  display: grid;
+  gap: var(--e-5);
+}
+
+.editor-precios__barra {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 14px;
+  background: var(--c-blanco);
+  border: 1px solid var(--c-linea);
+  box-shadow: 0 4px 14px rgba(16, 21, 28, 0.06);
+}
+
+.editor-precios__barra > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  font-size: var(--f-pequeno);
+}
+
+.editor-bloque {
+  gap: 20px;
+}
+
+.editor-elemento {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--c-linea);
+  border-left: 3px solid var(--c-azul);
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.editor-elemento[data-activo='no'] {
+  border-left-color: var(--c-linea-fuerte);
+  background: var(--c-fondo);
+}
+
+.editor-elemento > legend {
+  padding: 0 6px;
+  font-weight: 700;
+  color: var(--c-texto-fuerte);
+}
+
+.editor-elemento__campos {
+  display: grid;
+  gap: 14px;
+}
+
+.editor-elemento > .boton--texto {
+  justify-self: start;
+}
+
+.editor-lista {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .editor-lista {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.editor-colores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.editor-colores .casilla {
+  grid-template-columns: 22px auto;
+}
+
+.editor-muestra {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(16, 21, 28, 0.3);
+  vertical-align: -2px;
+}
+
+.editor-color {
+  padding: 4px;
+  height: var(--alto-campo);
+}
+
+.editor-descuento {
+  align-items: end;
+}

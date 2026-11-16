@@ -1,0 +1,190 @@
+---
+import Admin from '@/layouts/Admin.astro';
+import EtiquetaEstado from '@/components/admin/EtiquetaEstado.astro';
+import { TIPOS_CLIENTE, TIPOS_SOLICITUD, type TipoCliente } from '@/lib/solicitudes/tipos';
+import { formatoFecha } from '@/lib/gestion/formato';
+import { canalDeOrigen } from '@/lib/gestion/metricas';
+import { formatoCOP } from '@/lib/precios/motor';
+
+export const prerender = false;
+
+const repo = Astro.locals.repoAdmin!;
+const id = Astro.params.id ?? '';
+let error = '';
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const t = (k: string, max = 160) => String(f.get(k) ?? '').trim().slice(0, max);
+  const nombre = t('nombre');
+  const tipo = t('tipo');
+  if (nombre.length < 2) error = 'El nombre es obligatorio.';
+  else if (!(tipo in TIPOS_CLIENTE)) error = 'Elige un tipo de cliente.';
+  else {
+    await repo.actualizarCliente(id, {
+      nombre,
+      tipo: tipo as TipoCliente,
+      telefono: t('telefono', 30) || null,
+      empresa: t('empresa') || null,
+      nit: t('nit', 30) || null,
+      ciudad: t('ciudad') || null,
+      notas: t('notas', 4000) || null,
+      facturacion: Object.fromEntries(
+        Object.entries({ razonSocial: t('razonSocial'), correo: t('correoFacturacion'), direccion: t('direccionFacturacion', 240) }).filter(([, v]) => v),
+      ),
+    });
+    return Astro.redirect(`/admin/clientes/${id}?ok=1`, 303);
+  }
+}
+
+const datos = await repo.cliente(id);
+if (!datos) Astro.response.status = 404;
+const c = datos?.cliente;
+const total = datos?.solicitudes.filter((s) => s.pagadoEn).reduce((t, s) => t + (s.precioFinal ?? s.precioEstimado ?? 0), 0) ?? 0;
+---
+
+<Admin titulo={c?.nombre ?? 'Cliente no encontrado'} seccion="clientes">
+  <a class="enlace" href="/admin/clientes">← Clientes</a>
+  {
+    !c || !datos ? (
+      <div class="admin-cabecera">
+        <h1>Cliente no encontrado</h1>
+      </div>
+    ) : (
+      <>
+        <div class="admin-cabecera">
+          <div>
+            <h1>{c.nombre}</h1>
+            <p>
+              {TIPOS_CLIENTE[c.tipo]} · cliente desde {formatoFecha(c.creadoEn)} · llegó por {canalDeOrigen(c.origenPrimero)}
+            </p>
+          </div>
+          <p>
+            <strong class="cifra">{formatoCOP(total)}</strong> pagado
+          </p>
+        </div>
+        {Astro.url.searchParams.get('ok') && (
+          <p class="aviso aviso--ok" role="status">
+            Datos guardados.
+          </p>
+        )}
+        {error && (
+          <p class="aviso aviso--error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <div class="detalle">
+          <section class="panel" aria-labelledby="hist-titulo">
+            <h2 id="hist-titulo">Historial ({datos.solicitudes.length})</h2>
+            {datos.solicitudes.length === 0 ? (
+              <p class="secundario">Sin solicitudes.</p>
+            ) : (
+              <div class="tabla-envoltura">
+                <table class="tabla tabla--tarjetas">
+                  <thead>
+                    <tr>
+                      <th scope="col">Código</th>
+                      <th scope="col">Fecha</th>
+                      <th scope="col">Tipo</th>
+                      <th scope="col">Estado</th>
+                      <th scope="col" class="num">
+                        Valor
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {datos.solicitudes.map((s) => {
+                      const v = s.precioFinal ?? s.precioEstimado;
+                      return (
+                        <tr>
+                          <td>
+                            <a class="enlace" href={`/admin/solicitudes/${s.id}`}>
+                              {s.codigo}
+                            </a>
+                          </td>
+                          <td data-titulo="Fecha">{formatoFecha(s.creadoEn)}</td>
+                          <td data-titulo="Tipo">{TIPOS_SOLICITUD[s.tipo]}</td>
+                          <td>
+                            <EtiquetaEstado estado={s.estado} />
+                          </td>
+                          <td class="num" data-titulo="Valor">
+                            {v === null ? '—' : formatoCOP(v)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <form method="post" class="panel" aria-labelledby="datos-titulo">
+            <h2 id="datos-titulo">Datos</h2>
+            <div class="campo">
+              <label class="campo__etiqueta" for="nombre">Nombre</label>
+              <input id="nombre" name="nombre" class="control" value={c.nombre} required maxlength="160" />
+            </div>
+            <div class="campo">
+              <span class="campo__etiqueta">Correo</span>
+              <span>{c.correo}</span>
+              <span class="campo__ayuda">El correo identifica al cliente y no se cambia aquí.</span>
+            </div>
+            <div class="fila-campos fila-campos--2">
+              <div class="campo">
+                <label class="campo__etiqueta" for="telefono">Teléfono</label>
+                <input id="telefono" name="telefono" class="control" value={c.telefono ?? ''} maxlength="30" />
+              </div>
+              <div class="campo">
+                <label class="campo__etiqueta" for="tipo">Tipo</label>
+                <select id="tipo" name="tipo" class="control">
+                  {Object.entries(TIPOS_CLIENTE).map(([k, v]) => (
+                    <option value={k} selected={k === c.tipo}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div class="fila-campos fila-campos--2">
+              <div class="campo">
+                <label class="campo__etiqueta" for="empresa">Empresa o institución</label>
+                <input id="empresa" name="empresa" class="control" value={c.empresa ?? ''} maxlength="160" />
+              </div>
+              <div class="campo">
+                <label class="campo__etiqueta" for="nit">NIT</label>
+                <input id="nit" name="nit" class="control" value={c.nit ?? ''} maxlength="30" />
+              </div>
+            </div>
+            <div class="campo">
+              <label class="campo__etiqueta" for="ciudad">Ciudad</label>
+              <input id="ciudad" name="ciudad" class="control" value={c.ciudad ?? ''} maxlength="160" />
+            </div>
+            <fieldset class="grupo">
+              <legend>Facturación</legend>
+              <div class="formulario__pila">
+                <div class="campo">
+                  <label class="campo__etiqueta" for="razonSocial">Razón social</label>
+                  <input id="razonSocial" name="razonSocial" class="control" value={c.facturacion.razonSocial ?? ''} />
+                </div>
+                <div class="campo">
+                  <label class="campo__etiqueta" for="correoFacturacion">Correo de facturación</label>
+                  <input id="correoFacturacion" name="correoFacturacion" type="email" class="control" value={c.facturacion.correo ?? ''} />
+                </div>
+                <div class="campo">
+                  <label class="campo__etiqueta" for="direccionFacturacion">Dirección</label>
+                  <input id="direccionFacturacion" name="direccionFacturacion" class="control" value={c.facturacion.direccion ?? ''} />
+                </div>
+              </div>
+            </fieldset>
+            <div class="campo">
+              <label class="campo__etiqueta" for="notas">Notas internas</label>
+              <textarea id="notas" name="notas" class="control" rows="4">{c.notas ?? ''}</textarea>
+            </div>
+            <button type="submit" class="boton boton--primario">Guardar</button>
+          </form>
+        </div>
+      </>
+    )
+  }
+</Admin>
